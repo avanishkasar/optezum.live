@@ -28,4 +28,10 @@ describe('Shared Constants', () => {
   test('should include all supported exam types', () => {
     expect(constants.EXAM_TYPES).toEqual(expect.arrayContaining(['NEET', 'JEE', 'UPSC']));
   });
+
+  test('should export UI display constants', () => {
+    expect(constants.UI.CHART_WIDTH).toBeGreaterThan(0);
+    expect(constants.UI.STREAK_MAX_LOOKBACK_DAYS).toBe(365);
+    expect(constants.UI.LUCIDE_DEBOUNCE_MS).toBeGreaterThan(0);
+  });
 });

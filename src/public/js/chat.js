@@ -13,11 +13,10 @@ let conversationHistory = [];
 let isSending = false;
 
 /**
- * Crisis keywords for client-side detection.
- * If any are found, the crisis helpline banner is shown immediately.
+ * Crisis keywords for client-side detection (shared with server via APP_CONSTANTS).
  * @type {string[]}
  */
-const CRISIS_KEYWORDS = [
+const CRISIS_KEYWORDS = window.APP_CONSTANTS?.CRISIS_KEYWORDS ?? [
   'suicide', 'kill myself', 'end it all', "don't want to live",
   'want to die', 'self-harm', 'hurt myself',
 ];

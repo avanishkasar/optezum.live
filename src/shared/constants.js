@@ -90,6 +90,22 @@ const HTTP_STATUS = {
   SERVICE_UNAVAILABLE: 503,
 };
 
+/** Front-end UI limits and display constants. @type {object} */
+const UI = {
+  STREAK_MAX_LOOKBACK_DAYS: 365,
+  ENTRY_PREVIEW_LENGTH: 200,
+  RECENT_ENTRIES_DISPLAY: 20,
+  CHAT_HISTORY_LIMIT: 20,
+  CHART_WIDTH: 560,
+  CHART_HEIGHT: 200,
+  CHART_PADDING: 40,
+  MS_PER_DAY: 86400000,
+  MS_PER_HOUR: 3600000,
+  POMODORO_WORK_MINUTES: 25,
+  POMODORO_BREAK_MINUTES: 5,
+  LUCIDE_DEBOUNCE_MS: 80,
+};
+
 const exportsObject = {
   RATE_LIMIT,
   HSTS,
@@ -101,6 +117,7 @@ const exportsObject = {
   ALLOWED_ORIGINS,
   EXAM_TYPES,
   HTTP_STATUS,
+  UI,
 };
 
 if (typeof module !== 'undefined' && module.exports) {

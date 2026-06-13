@@ -354,8 +354,6 @@ function setupQuoteFetcher() {
   if (btn) {
     btn.addEventListener('click', () => fetchMotivationalQuote());
   }
-  // Fetch initial quote
-  fetchMotivationalQuote();
 }
 
 /**

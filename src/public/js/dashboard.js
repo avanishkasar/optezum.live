@@ -20,7 +20,6 @@ function initDashboard() {
   setupRangeToggle();
   setupInsightsRefresh();
   refreshDashboard();
-  requestWeeklyInsights();
 }
 
 /**
@@ -62,8 +61,8 @@ function setupRangeToggle() {
       chartRange = '7';
       toggle7.classList.add('active');
       toggle30?.classList.remove('active');
-      toggle7.setAttribute('aria-pressed', 'true');
-      toggle30?.setAttribute('aria-pressed', 'false');
+      toggle7.setAttribute('aria-checked', 'true');
+      toggle30?.setAttribute('aria-checked', 'false');
       refreshDashboard();
     });
   }
@@ -73,8 +72,8 @@ function setupRangeToggle() {
       chartRange = '30';
       toggle30.classList.add('active');
       toggle7?.classList.remove('active');
-      toggle30.setAttribute('aria-pressed', 'true');
-      toggle7?.setAttribute('aria-pressed', 'false');
+      toggle30.setAttribute('aria-checked', 'true');
+      toggle7?.setAttribute('aria-checked', 'false');
       refreshDashboard();
     });
   }
@@ -102,9 +101,10 @@ function renderMoodChart(entries) {
   }
 
   const sorted = [...entries].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-  const width = 560;
-  const height = 200;
-  const padding = 40;
+  const ui = window.APP_CONSTANTS?.UI ?? {};
+  const width = ui.CHART_WIDTH ?? 560;
+  const height = ui.CHART_HEIGHT ?? 200;
+  const padding = ui.CHART_PADDING ?? 40;
 
   const svgNS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(svgNS, 'svg');
@@ -386,40 +386,6 @@ function renderStats(entries) {
   if (streakEl) {
     streakEl.textContent = String(calculateStreak(entries));
   }
-}
-
-/**
- * Calculates the current consecutive journaling streak in days.
- * @param {object[]} entries - All journal entries sorted newest first.
- * @returns {number} The streak count.
- */
-function calculateStreak(entries) {
-  if (entries.length === 0) return 0;
-
-  const sorted = [...entries].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  let streak = 0;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const datesSet = new Set(
-    sorted.map((e) => {
-      const d = new Date(e.timestamp);
-      d.setHours(0, 0, 0, 0);
-      return d.getTime();
-    })
-  );
-
-  const checkDate = new Date(today);
-  if (!datesSet.has(checkDate.getTime())) {
-    checkDate.setDate(checkDate.getDate() - 1);
-  }
-
-  while (datesSet.has(checkDate.getTime())) {
-    streak++;
-    checkDate.setDate(checkDate.getDate() - 1);
-  }
-
-  return streak;
 }
 
 /**

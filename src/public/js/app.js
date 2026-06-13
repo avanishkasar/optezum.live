@@ -18,11 +18,52 @@ const VIEW_META = {
   profile: { title: 'Profile & Settings', subtitle: 'Manage your data and exam countdown' },
 };
 
+/** @type {Object<string, boolean>} Tracks which views have been initialized. */
+const viewInitialized = {
+  journal: false,
+  chat: false,
+  dashboard: false,
+  mindfulness: false,
+  profile: false,
+};
+
+/**
+ * Lazily initializes a view module on first access (efficiency: defer heavy work).
+ * @param {string} viewName - View identifier.
+ * @returns {void}
+ */
+function ensureViewInitialized(viewName) {
+  if (viewInitialized[viewName]) return;
+
+  switch (viewName) {
+    case 'journal':
+      if (typeof initJournal === 'function') initJournal();
+      break;
+    case 'chat':
+      if (typeof initChat === 'function') initChat();
+      break;
+    case 'dashboard':
+      if (typeof initDashboard === 'function') initDashboard();
+      break;
+    case 'mindfulness':
+      if (typeof initMindfulness === 'function') initMindfulness();
+      break;
+    case 'profile':
+      initProfile();
+      break;
+    default:
+      break;
+  }
+
+  viewInitialized[viewName] = true;
+}
+
 /**
  * Switch to a specific view pane
  * @param {string} viewName - Name of the view to switch to
  */
 function switchView(viewName) {
+  ensureViewInitialized(viewName);
   const navBtns = document.querySelectorAll('.nav-btn');
   const viewPanes = document.querySelectorAll('.view-pane');
   const titleEl = document.getElementById('viewTitle');
@@ -85,18 +126,22 @@ function initNavigation() {
    ======================================== */
 
 /**
- * Initialize Lucide icons and setup observer for dynamic content
+ * Initialize Lucide icons with debounced observer for dynamic content.
+ * @returns {void}
  */
 function initIcons() {
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
+  if (typeof lucide === 'undefined') return;
 
-    // MutationObserver to auto-create icons in dynamically added content
-    const observer = new MutationObserver(() => {
-      lucide.createIcons();
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-  }
+  lucide.createIcons();
+
+  const debounceMs = window.APP_CONSTANTS?.UI?.LUCIDE_DEBOUNCE_MS ?? 80;
+  let debounceTimer = null;
+
+  const observer = new MutationObserver(() => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => lucide.createIcons(), debounceMs);
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
 }
 
 /* ========================================
@@ -107,58 +152,14 @@ function initIcons() {
  * Calculate and display current journaling streak
  */
 function updateStreak() {
-  if (typeof getEntries !== 'function') return;
+  if (typeof getEntries !== 'function' || typeof calculateStreak !== 'function') return;
 
-  const entries = getEntries();
+  const streak = calculateStreak(getEntries());
   const streakEl = document.getElementById('streakCount');
   const streakStatEl = document.getElementById('streakStat');
 
-  if (!entries.length) {
-    if (streakEl) streakEl.textContent = '0';
-    if (streakStatEl) streakStatEl.textContent = '0';
-    return;
-  }
-
-  // Calculate streak
-  let streak = 0;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  for (let i = 0; i < 365; i++) {
-    const checkDate = new Date(today);
-    checkDate.setDate(checkDate.getDate() - i);
-    const dateStr = checkDate.toISOString().split('T')[0];
-
-    const hasEntry = entries.some((e) => {
-      const entryDate = new Date(e.timestamp);
-      return entryDate.toISOString().split('T')[0] === dateStr;
-    });
-
-    if (hasEntry) {
-      streak++;
-    } else if (i > 0) {
-      break;
-    }
-  }
-
   if (streakEl) streakEl.textContent = String(streak);
   if (streakStatEl) streakStatEl.textContent = String(streak);
-}
-
-/* ========================================
-   DATE DISPLAY
-   ======================================== */
-
-/**
- * Set today's date on the journal form
- */
-function setTodayDate() {
-  const dateEl = document.getElementById('journal-date');
-  if (dateEl) {
-    const today = new Date();
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    dateEl.textContent = today.toLocaleDateString('en-IN', options);
-  }
 }
 
 /* ========================================
@@ -348,10 +349,13 @@ function updateCountdown(dateStr) {
     return;
   }
 
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const msPerDay = window.APP_CONSTANTS?.UI?.MS_PER_DAY ?? 86400000;
+  const msPerHour = window.APP_CONSTANTS?.UI?.MS_PER_HOUR ?? 3600000;
 
-  display.innerHTML = '';
+  const days = Math.floor(diff / msPerDay);
+  const hours = Math.floor((diff % msPerDay) / msPerHour);
+
+  display.replaceChildren();
   const numEl = document.createElement('div');
   numEl.className = 'countdown-num';
   numEl.textContent = `${days}d ${hours}h`;
@@ -374,15 +378,9 @@ function updateCountdown(dateStr) {
 function initApp() {
   initIcons();
   initNavigation();
-  setTodayDate();
   updateStreak();
-  initProfile();
-
-  // Initialize feature modules (defined in their own files)
-  if (typeof initJournal === 'function') initJournal();
-  if (typeof initChat === 'function') initChat();
-  if (typeof initDashboard === 'function') initDashboard();
-  if (typeof initMindfulness === 'function') initMindfulness();
+  ensureViewInitialized('journal');
+  ensureViewInitialized('profile');
 }
 
 // Boot

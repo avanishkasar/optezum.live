@@ -7,13 +7,15 @@
   <meta name="theme-color" content="#0a0a0a">
   <title>Optezum — Mental Wellness Tracker for Students</title>
 
-  <!-- Fonts -->
+  <!-- Performance: preconnect to external origins -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="dns-prefetch" href="https://unpkg.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Icons (pinned version, deferred) -->
+  <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
 
   <!-- Styles -->
   <link rel="stylesheet" href="css/style.css">
@@ -246,13 +248,11 @@
               <!-- Chat Input & Quick Actions Container -->
               <div class="chat-input-wrapper">
                 <div class="chat-input-area">
-                  <button class="btn-chat-action" aria-label="Attach File" type="button">
-                    <i data-lucide="paperclip" class="w-4 h-4" aria-hidden="true"></i>
-                  </button>
                   <label for="chat-input" class="sr-only">Type your message</label>
                   <textarea id="chat-input" rows="1" placeholder="Type your request or share what's on your mind..." aria-label="Chat message input" maxlength="5000"></textarea>
                   <button class="btn-send" id="chat-send-btn" aria-label="Send message" type="button">
                     <i data-lucide="arrow-up" aria-hidden="true"></i>
+                  </button>
                 </div>
 
                 <!-- Quick Action Pills -->
@@ -574,16 +574,17 @@
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script src="/shared/constants.js"></script>
-  <script src="js/utils/validation-core.js"></script>
-  <script src="js/utils/sanitizer.js"></script>
-  <script src="js/utils/validators-browser.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/journal.js"></script>
-  <script src="js/chat.js"></script>
-  <script src="js/dashboard.js"></script>
-  <script src="js/mindfulness.js"></script>
-  <script src="js/app.js"></script>
+  <!-- Scripts (deferred — preserves load order, non-blocking parse) -->
+  <script src="/shared/constants.js" defer></script>
+  <script src="js/utils/validation-core.js" defer></script>
+  <script src="js/utils/sanitizer.js" defer></script>
+  <script src="js/utils/validators-browser.js" defer></script>
+  <script src="js/utils/streak.js" defer></script>
+  <script src="js/storage.js" defer></script>
+  <script src="js/journal.js" defer></script>
+  <script src="js/chat.js" defer></script>
+  <script src="js/dashboard.js" defer></script>
+  <script src="js/mindfulness.js" defer></script>
+  <script src="js/app.js" defer></script>
 </body>
 </html>
