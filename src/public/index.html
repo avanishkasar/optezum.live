@@ -101,10 +101,10 @@
               <div class="card-header">
                 <i data-lucide="edit-3" aria-hidden="true"></i>
                 <h2>New Entry</h2>
-                <span class="date-badge" id="journalDate" aria-label="Today's date"></span>
+                <span class="date-badge" id="journal-date" aria-label="Today's date"></span>
               </div>
 
-              <form id="journalForm" class="journal-form" novalidate>
+              <form id="journal-form" class="journal-form" novalidate>
                 <!-- Mood Selector -->
                 <div class="form-group">
                   <label id="mood-label">How are you feeling?</label>
@@ -120,27 +120,27 @@
 
                 <!-- Stress Slider -->
                 <div class="form-group">
-                  <label for="stressLevel">Stress Level: <span id="stressValue" aria-live="polite">5</span>/10</label>
-                  <input type="range" id="stressLevel" min="1" max="10" value="5" aria-label="Stress level from 1 to 10">
+                  <label for="stress-level">Stress Level: <span id="stressValue" aria-live="polite">5</span>/10</label>
+                  <input type="range" id="stress-level" min="1" max="10" value="5" aria-label="Stress level from 1 to 10">
                   <div class="slider-labels"><span>Low</span><span>High</span></div>
                 </div>
 
                 <!-- Sleep & Study Row -->
                 <div class="form-row">
                   <div class="form-group">
-                    <label for="sleepHours">Sleep (hours)</label>
-                    <input type="number" id="sleepHours" min="0" max="24" step="0.5" placeholder="7" aria-label="Hours of sleep last night">
+                    <label for="sleep-hours">Sleep (hours)</label>
+                    <input type="number" id="sleep-hours" min="0" max="24" step="0.5" placeholder="7" aria-label="Hours of sleep last night">
                   </div>
                   <div class="form-group">
-                    <label for="studyHours">Study (hours)</label>
-                    <input type="number" id="studyHours" min="0" max="24" step="0.5" placeholder="6" aria-label="Hours studied today">
+                    <label for="study-hours">Study (hours)</label>
+                    <input type="number" id="study-hours" min="0" max="24" step="0.5" placeholder="6" aria-label="Hours studied today">
                   </div>
                 </div>
 
                 <!-- Exam Type -->
                 <div class="form-group">
-                  <label for="examType">Exam Preparing For</label>
-                  <select id="examType" aria-label="Select your exam type">
+                  <label for="exam-type">Exam Preparing For</label>
+                  <select id="exam-type" aria-label="Select your exam type">
                     <option value="">Select exam...</option>
                     <option value="NEET">NEET</option>
                     <option value="JEE">JEE</option>
@@ -155,14 +155,14 @@
 
                 <!-- Journal Text -->
                 <div class="form-group">
-                  <label for="journalEntry">What's on your mind today?</label>
-                  <textarea id="journalEntry" rows="5" placeholder="Write freely about your day, feelings, study progress, worries, or anything on your mind..." aria-label="Journal entry text" maxlength="5000"></textarea>
+                  <label for="journal-text">What's on your mind today?</label>
+                  <textarea id="journal-text" rows="5" placeholder="Write freely about your day, feelings, study progress, worries, or anything on your mind..." aria-label="Journal entry text" maxlength="5000"></textarea>
                   <div class="char-count"><span id="charCount">0</span>/5000</div>
-                  <span class="error-msg" id="entryError" role="alert" aria-live="assertive"></span>
+                  <span class="error-msg" id="journal-error" role="alert" aria-live="assertive"></span>
                 </div>
 
                 <!-- Submit -->
-                <button type="submit" class="btn-primary" id="btnSubmitJournal" aria-label="Submit journal entry for AI analysis">
+                <button type="submit" class="btn-primary" id="journal-submit" aria-label="Submit journal entry for AI analysis">
                   <i data-lucide="sparkles" aria-hidden="true"></i>
                   <span>Analyze with AI</span>
                 </button>
@@ -177,7 +177,7 @@
                   <i data-lucide="brain" aria-hidden="true"></i>
                   <h2>AI Wellness Insights</h2>
                 </div>
-                <div id="analysisContent" role="status"></div>
+                <div id="analysis-results" role="status"></div>
               </div>
 
               <!-- Loading State -->
@@ -192,7 +192,7 @@
                   <i data-lucide="history" aria-hidden="true"></i>
                   <h2>Recent Entries</h2>
                 </div>
-                <div id="pastEntriesList" class="entries-list" aria-label="Past journal entries"></div>
+                <div id="past-entries" class="entries-list" aria-label="Past journal entries"></div>
                 <div id="noEntriesMsg" class="empty-state">
                   <i data-lucide="notebook-pen" aria-hidden="true"></i>
                   <p>No entries yet. Start journaling to track your wellness!</p>
@@ -204,16 +204,16 @@
 
         <!-- ===== VIEW: CHAT ===== -->
         <section class="view-pane" id="view-chat" role="tabpanel" aria-labelledby="tab-chat" hidden>
-          <div class="chat-layout">
-            <div class="card chat-card">
+          <div class="chat-layout premium-chat-bg">
+            <div class="card chat-card glassmorphic-chat">
               <div class="card-header">
                 <i data-lucide="bot" aria-hidden="true"></i>
-                <h2>Wellness Companion</h2>
+                <h2>Optezum Companion</h2>
                 <span class="status-dot online" aria-label="AI companion is online"></span>
               </div>
 
               <!-- Crisis Banner (hidden by default) -->
-              <div class="crisis-banner" id="crisisBanner" role="alert" aria-live="assertive" style="display:none;">
+              <div class="crisis-banner" id="crisis-banner" role="alert" aria-live="assertive" style="display:none;">
                 <i data-lucide="alert-triangle" aria-hidden="true"></i>
                 <div class="crisis-content">
                   <strong>You are not alone. Please reach out for help:</strong>
@@ -226,26 +226,41 @@
               </div>
 
               <!-- Chat Messages -->
-              <div class="chat-messages" id="chatMessages" role="log" aria-live="polite" aria-label="Conversation messages">
-                <div class="chat-bubble ai">
-                  <div class="bubble-content">
-                    <p>Hi there! 👋 I'm your wellness companion. I'm here to listen, support, and help you navigate exam stress. How are you feeling today?</p>
-                  </div>
-                </div>
-              </div>
+              <div class="chat-messages" id="chat-messages" role="log" aria-live="polite" aria-label="Conversation messages"></div>
 
               <!-- Typing Indicator -->
-              <div class="typing-indicator" id="typingIndicator" style="display:none;" aria-label="AI is typing" role="status">
+              <div class="typing-indicator" id="typing-indicator" style="display:none;" aria-label="AI is typing" role="status">
                 <span></span><span></span><span></span>
               </div>
 
-              <!-- Chat Input -->
-              <div class="chat-input-area">
-                <label for="chatInput" class="sr-only">Type your message</label>
-                <textarea id="chatInput" rows="1" placeholder="Share what's on your mind..." aria-label="Chat message input" maxlength="5000"></textarea>
-                <button class="btn-send" id="btnSendChat" aria-label="Send message">
-                  <i data-lucide="send" aria-hidden="true"></i>
-                </button>
+              <!-- Chat Input & Quick Actions Container -->
+              <div class="chat-input-wrapper">
+                <div class="chat-input-area">
+                  <button class="btn-chat-action" aria-label="Attach File" type="button">
+                    <i data-lucide="paperclip" class="w-4 h-4" aria-hidden="true"></i>
+                  </button>
+                  <label for="chat-input" class="sr-only">Type your message</label>
+                  <textarea id="chat-input" rows="1" placeholder="Type your request or share what's on your mind..." aria-label="Chat message input" maxlength="5000"></textarea>
+                  <button class="btn-send" id="chat-send-btn" aria-label="Send message" type="button">
+                    <i data-lucide="arrow-up" aria-hidden="true"></i>
+                  </button>
+                </div>
+
+                <!-- Quick Action Pills -->
+                <div class="quick-actions-row">
+                  <button class="quick-action-pill" type="button" onclick="document.getElementById('chat-input').value='Help me manage study pressure'; document.getElementById('chat-input').focus();">
+                    <i data-lucide="book-open" aria-hidden="true"></i><span>Study Tips</span>
+                  </button>
+                  <button class="quick-action-pill" type="button" onclick="document.getElementById('chat-input').value='Give me a 1-minute breathing technique'; document.getElementById('chat-input').focus();">
+                    <i data-lucide="wind" aria-hidden="true"></i><span>Breathing Plan</span>
+                  </button>
+                  <button class="quick-action-pill" type="button" onclick="document.getElementById('chat-input').value='Recommend theme ideas to keep my workspace calm'; document.getElementById('chat-input').focus();">
+                    <i data-lucide="palette" aria-hidden="true"></i><span>Theme Ideas</span>
+                  </button>
+                  <button class="quick-action-pill" type="button" onclick="document.getElementById('chat-input').value='I feel highly anxious about exam results'; document.getElementById('chat-input').focus();">
+                    <i data-lucide="alert-circle" aria-hidden="true"></i><span>Exam Anxiety</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -286,19 +301,43 @@
                   <i data-lucide="trending-up" aria-hidden="true"></i>
                   <h2>Mood Trend</h2>
                   <div class="chart-toggle" role="radiogroup" aria-label="Chart time range">
-                    <button class="toggle-btn active" data-range="7" role="radio" aria-checked="true">7 Days</button>
-                    <button class="toggle-btn" data-range="30" role="radio" aria-checked="false">30 Days</button>
+                    <button class="toggle-btn active" id="range-7" role="radio" aria-checked="true">7 Days</button>
+                    <button class="toggle-btn" id="range-30" role="radio" aria-checked="false">30 Days</button>
                   </div>
                 </div>
-                <div class="chart-area" id="moodChart" aria-label="Mood trend chart" role="img"></div>
+                <div class="chart-area" id="mood-chart" aria-label="Mood trend chart" role="img"></div>
               </div>
 
-              <div class="card chart-card">
+              <div class="card chart-card github-heatmap-card">
                 <div class="card-header">
                   <i data-lucide="grid-3x3" aria-hidden="true"></i>
                   <h2>Stress Heatmap</h2>
                 </div>
-                <div class="heatmap-area" id="stressHeatmap" aria-label="Stress heatmap by day of week" role="img"></div>
+                <div class="heatmap-container-wrapper">
+                  <div class="heatmap-area" id="stress-heatmap" aria-label="Stress heatmap by day of week" role="img"></div>
+                  <!-- Legend -->
+                  <div class="heatmap-legend">
+                    <span>Less Stress (Teal)</span>
+                    <div class="legend-blocks">
+                      <span class="legend-block block-low"></span>
+                      <span class="legend-block block-med-low"></span>
+                      <span class="legend-block block-med"></span>
+                      <span class="legend-block block-high"></span>
+                    </div>
+                    <span>More Stress (Red)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Correlation Chart Row -->
+            <div class="charts-row">
+              <div class="card chart-card correlation-card">
+                <div class="card-header">
+                  <i data-lucide="bar-chart-2" aria-hidden="true"></i>
+                  <h2>Sleep vs Mood Correlation</h2>
+                </div>
+                <div class="correlation-area" id="correlation-chart" aria-label="Correlation chart" role="img"></div>
               </div>
             </div>
 
@@ -330,21 +369,37 @@
                 <i data-lucide="wind" aria-hidden="true"></i>
                 <h2>Breathing Exercise</h2>
               </div>
-              <div class="breathing-selector" role="radiogroup" aria-label="Select breathing technique">
-                <button class="technique-btn active" data-technique="478" role="radio" aria-checked="true">4-7-8</button>
-                <button class="technique-btn" data-technique="box" role="radio" aria-checked="false">Box</button>
-                <button class="technique-btn" data-technique="deep" role="radio" aria-checked="false">Deep Calm</button>
+              <div class="breathing-selector">
+                <label for="breathing-technique" class="sr-only">Choose Breathing Technique</label>
+                <select id="breathing-technique" aria-label="Breathing technique" class="premium-select">
+                  <option value="4-7-8">4-7-8 Relaxation</option>
+                  <option value="box">Box Breathing</option>
+                  <option value="deep-calm">Deep Calm</option>
+                </select>
               </div>
               <div class="breathing-visual">
-                <div class="breath-circle" id="breathCircle" aria-live="polite">
-                  <span class="breath-text" id="breathText">Ready</span>
-                  <span class="breath-timer" id="breathTimer"></span>
+                <!-- concentric animated breath ripples -->
+                <div class="ripple-wrapper">
+                  <span class="ripple-circle c1"></span>
+                  <span class="ripple-circle c2"></span>
+                  <span class="ripple-circle c3"></span>
+                  <span class="ripple-circle c4"></span>
+                </div>
+                <div class="breath-circle" id="breathing-circle" aria-live="polite">
+                  <span class="breath-text" id="breathing-phase">Ready</span>
+                  <span class="breath-timer" id="breathing-timer"></span>
                 </div>
               </div>
-              <button class="btn-primary" id="btnStartBreathing" aria-label="Start breathing exercise">
-                <i data-lucide="play" aria-hidden="true"></i>
-                <span>Begin</span>
-              </button>
+              <div class="breathing-controls">
+                <button class="btn-primary" id="breathing-start" aria-label="Start breathing exercise">
+                  <i data-lucide="play" aria-hidden="true"></i>
+                  <span>Begin</span>
+                </button>
+                <button class="btn-danger hidden" id="breathing-stop" aria-label="Stop breathing exercise">
+                  <i data-lucide="square" aria-hidden="true"></i>
+                  <span>Stop</span>
+                </button>
+              </div>
             </div>
 
             <!-- Grounding Exercise -->
@@ -354,32 +409,19 @@
                 <h2>5-4-3-2-1 Grounding</h2>
               </div>
               <p class="grounding-desc">A sensory awareness technique to anchor you in the present moment.</p>
-              <div id="groundingSteps" class="grounding-steps" aria-live="polite">
-                <div class="grounding-step" data-step="5">
-                  <span class="step-num">5</span>
-                  <span class="step-text">things you can <strong>see</strong></span>
-                </div>
-                <div class="grounding-step" data-step="4">
-                  <span class="step-num">4</span>
-                  <span class="step-text">things you can <strong>touch</strong></span>
-                </div>
-                <div class="grounding-step" data-step="3">
-                  <span class="step-num">3</span>
-                  <span class="step-text">things you can <strong>hear</strong></span>
-                </div>
-                <div class="grounding-step" data-step="2">
-                  <span class="step-num">2</span>
-                  <span class="step-text">things you can <strong>smell</strong></span>
-                </div>
-                <div class="grounding-step" data-step="1">
-                  <span class="step-num">1</span>
-                  <span class="step-text">thing you can <strong>taste</strong></span>
-                </div>
+              <div class="grounding-panel">
+                <p id="grounding-prompt" class="grounding-text-prompt">Find a comfortable posture to begin.</p>
+                <p id="grounding-progress" class="grounding-progress-label">Ready</p>
               </div>
-              <button class="btn-primary" id="btnStartGrounding" aria-label="Start grounding exercise">
-                <i data-lucide="play" aria-hidden="true"></i>
-                <span>Start Exercise</span>
-              </button>
+              <div class="grounding-controls">
+                <button class="btn-primary" id="grounding-start" aria-label="Start grounding exercise">
+                  <i data-lucide="play" aria-hidden="true"></i>
+                  <span>Start Exercise</span>
+                </button>
+                <button class="btn-primary hidden" id="grounding-next" aria-label="Next grounding step">
+                  <span>Next Sense</span><i data-lucide="chevron-right" aria-hidden="true"></i>
+                </button>
+              </div>
             </div>
 
             <!-- Pomodoro Timer -->
@@ -389,16 +431,22 @@
                 <h2>Study Timer</h2>
               </div>
               <div class="pomodoro-display">
-                <div class="pomodoro-ring" id="pomodoroRing">
-                  <span class="pomodoro-time" id="pomodoroTime" aria-live="polite">25:00</span>
-                  <span class="pomodoro-label" id="pomodoroLabel">Focus Time</span>
+                <!-- Circular progress style loader-ring around timer -->
+                <div class="pomodoro-outer-ring">
+                  <div class="pomodoro-ring" id="pomodoroRing">
+                    <span class="pomodoro-time" id="pomodoro-display" aria-live="polite">25:00</span>
+                    <span class="pomodoro-label" id="pomodoro-status">Focus Time</span>
+                  </div>
                 </div>
               </div>
               <div class="pomodoro-controls">
-                <button class="btn-primary" id="btnStartPomodoro" aria-label="Start study timer">
+                <button class="btn-primary" id="pomodoro-start" aria-label="Start study timer">
                   <i data-lucide="play" aria-hidden="true"></i><span>Start</span>
                 </button>
-                <button class="btn-ghost" id="btnResetPomodoro" aria-label="Reset timer">
+                <button class="btn-danger hidden" id="pomodoro-stop" aria-label="Stop study timer">
+                  <i data-lucide="square" aria-hidden="true"></i><span>Pause</span>
+                </button>
+                <button class="btn-ghost" id="pomodoro-reset" aria-label="Reset timer">
                   <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Reset</span>
                 </button>
               </div>
@@ -411,10 +459,10 @@
                 <h2>Daily Motivation</h2>
               </div>
               <blockquote id="quoteContent" aria-live="polite">
-                <p>"The expert in anything was once a beginner."</p>
-                <cite>— Helen Hayes</cite>
+                <p id="quote-text">"The expert in anything was once a beginner."</p>
+                <cite id="quote-author">— Helen Hayes</cite>
               </blockquote>
-              <button class="btn-ghost" id="btnNewQuote" aria-label="Get a new motivational quote">
+              <button class="btn-ghost" id="quote-refresh" aria-label="Get a new motivational quote">
                 <i data-lucide="refresh-cw" aria-hidden="true"></i><span>New Quote</span>
               </button>
             </div>
