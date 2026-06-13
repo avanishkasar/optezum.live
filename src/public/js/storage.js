@@ -7,6 +7,32 @@
 const ENTRIES_KEY = 'optezum_entries';
 const SETTINGS_KEY = 'optezum_settings';
 
+/**
+ * Generates a unique entry ID across browser and Node 18+ runtimes.
+ * Node 18 lacks global `crypto`; falls back to `require('crypto')` then timestamp ID.
+ * @returns {string} Unique identifier string.
+ */
+function generateEntryId() {
+  if (typeof globalThis !== 'undefined'
+    && globalThis.crypto
+    && typeof globalThis.crypto.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID();
+  }
+
+  if (typeof require === 'function') {
+    try {
+      const { randomUUID } = require('crypto');
+      if (typeof randomUUID === 'function') {
+        return randomUUID();
+      }
+    } catch {
+      // Browser context without Node crypto module.
+    }
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
 /** @returns {number} Default recent-entries lookback in days. */
 function getDefaultRecentDays() {
   if (typeof window !== 'undefined' && window.APP_CONSTANTS) {
@@ -41,7 +67,7 @@ function saveEntry(entry) {
     const entries = getEntries();
     const newEntry = {
       ...entry,
-      id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      id: generateEntryId(),
       timestamp: new Date().toISOString(),
     };
     entries.unshift(newEntry);
