@@ -21,7 +21,7 @@ function createSecurityMiddleware() {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com'],
+        scriptSrc: ["'self'", 'https://unpkg.com'],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://unpkg.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:', 'https:'],
@@ -43,8 +43,23 @@ function createSecurityMiddleware() {
     },
   });
 
+  const allowedOrigins = [
+    'https://www.optezum.live',
+    'https://optezum.live',
+    'https://warmup-challenge-production.up.railway.app'
+  ];
+
   const corsMiddleware = cors({
-    origin: true,
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      const isAllowed = allowedOrigins.includes(origin) || 
+                        origin.startsWith('http://localhost') || 
+                        origin.startsWith('http://127.0.0.1');
+      if (isAllowed) {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'), false);
+    },
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,

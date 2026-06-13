@@ -253,21 +253,20 @@
                   <textarea id="chat-input" rows="1" placeholder="Type your request or share what's on your mind..." aria-label="Chat message input" maxlength="5000"></textarea>
                   <button class="btn-send" id="chat-send-btn" aria-label="Send message" type="button">
                     <i data-lucide="arrow-up" aria-hidden="true"></i>
-                  </button>
                 </div>
 
                 <!-- Quick Action Pills -->
                 <div class="quick-actions-row">
-                  <button class="quick-action-pill" type="button" onclick="document.getElementById('chat-input').value='Help me manage study pressure'; document.getElementById('chat-input').focus();">
+                  <button class="quick-action-pill" type="button" data-prompt="Help me manage study pressure">
                     <i data-lucide="book-open" aria-hidden="true"></i><span>Study Tips</span>
                   </button>
-                  <button class="quick-action-pill" type="button" onclick="document.getElementById('chat-input').value='Give me a 1-minute breathing technique'; document.getElementById('chat-input').focus();">
+                  <button class="quick-action-pill" type="button" data-prompt="Give me a 1-minute breathing technique">
                     <i data-lucide="wind" aria-hidden="true"></i><span>Breathing Plan</span>
                   </button>
-                  <button class="quick-action-pill" type="button" onclick="document.getElementById('chat-input').value='Recommend theme ideas to keep my workspace calm'; document.getElementById('chat-input').focus();">
+                  <button class="quick-action-pill" type="button" data-prompt="Recommend theme ideas to keep my workspace calm">
                     <i data-lucide="palette" aria-hidden="true"></i><span>Theme Ideas</span>
                   </button>
-                  <button class="quick-action-pill" type="button" onclick="document.getElementById('chat-input').value='I feel highly anxious about exam results'; document.getElementById('chat-input').focus();">
+                  <button class="quick-action-pill" type="button" data-prompt="I feel highly anxious about exam results">
                     <i data-lucide="alert-circle" aria-hidden="true"></i><span>Exam Anxiety</span>
                   </button>
                 </div>

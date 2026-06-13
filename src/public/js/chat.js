@@ -43,6 +43,18 @@ function initChat() {
       }
     });
 
+    // Quick action pills handler
+    const pills = document.querySelectorAll('.quick-action-pill');
+    pills.forEach((pill) => {
+      pill.addEventListener('click', () => {
+        const prompt = pill.getAttribute('data-prompt');
+        if (prompt) {
+          chatInput.value = prompt;
+          chatInput.focus();
+        }
+      });
+    });
+
     // Debounced input — no action needed for now, but structure is ready
     let debounceTimer = null;
     chatInput.addEventListener('input', () => {
