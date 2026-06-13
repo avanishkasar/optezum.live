@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Optezum — AI-powered mental wellness tracker helping students manage stress, mood, and well-being during NEET, JEE, CUET, CAT, GATE, and UPSC exam preparation.">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Optezum — Mental Wellness Tracker for Students</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Skip Navigation — Accessibility -->
+  <a href="#main-content" class="skip-link" aria-label="Skip to main content">Skip to main content</a>
+
+  <div class="app-shell">
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="sidebar" role="complementary" aria-label="Application sidebar">
+      <div class="sidebar-brand">
+        <i data-lucide="brain" class="brand-icon" aria-hidden="true"></i>
+        <span class="brand-name">Optezum</span>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Primary navigation">
+        <div class="nav-group" role="tablist" aria-label="Main views">
+          <button class="nav-btn active" data-view="journal" role="tab" aria-selected="true" aria-controls="view-journal" id="tab-journal">
+            <i data-lucide="book-open" aria-hidden="true"></i>
+            <span>Journal</span>
+          </button>
+          <button class="nav-btn" data-view="chat" role="tab" aria-selected="false" aria-controls="view-chat" id="tab-chat">
+            <i data-lucide="message-circle" aria-hidden="true"></i>
+            <span>Companion</span>
+          </button>
+          <button class="nav-btn" data-view="dashboard" role="tab" aria-selected="false" aria-controls="view-dashboard" id="tab-dashboard">
+            <i data-lucide="bar-chart-3" aria-hidden="true"></i>
+            <span>Dashboard</span>
+          </button>
+          <button class="nav-btn" data-view="mindfulness" role="tab" aria-selected="false" aria-controls="view-mindfulness" id="tab-mindfulness">
+            <i data-lucide="heart-pulse" aria-hidden="true"></i>
+            <span>Mindfulness</span>
+          </button>
+          <button class="nav-btn" data-view="profile" role="tab" aria-selected="false" aria-controls="view-profile" id="tab-profile">
+            <i data-lucide="user" aria-hidden="true"></i>
+            <span>Profile</span>
+          </button>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-card">
+          <div class="user-avatar" aria-hidden="true">AK</div>
+          <div class="user-info">
+            <span class="user-name">Student</span>
+            <span class="user-status">Wellness Active</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <div class="main-wrapper">
+
+      <!-- Header -->
+      <header class="top-header" role="banner">
+        <div class="header-left">
+          <button class="mobile-menu-btn" aria-label="Open navigation menu" id="mobileMenuBtn">
+            <i data-lucide="menu" aria-hidden="true"></i>
+          </button>
+          <div>
+            <h1 class="header-title" id="viewTitle">Daily Journal</h1>
+            <p class="header-subtitle" id="viewSubtitle">Record your thoughts and track your wellness</p>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="streak-badge" aria-label="Current streak">
+            <i data-lucide="flame" aria-hidden="true"></i>
+            <span id="streakCount">0</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content Area -->
+      <main class="content-area" id="main-content" role="main">
+
+        <!-- ===== VIEW: JOURNAL ===== -->
+        <section class="view-pane active" id="view-journal" role="tabpanel" aria-labelledby="tab-journal">
+          <div class="journal-layout">
+
+            <!-- Journal Entry Form -->
+            <div class="card journal-form-card">
+              <div class="card-header">
+                <i data-lucide="edit-3" aria-hidden="true"></i>
+                <h2>New Entry</h2>
+                <span class="date-badge" id="journalDate" aria-label="Today's date"></span>
+              </div>
+
+              <form id="journalForm" class="journal-form" novalidate>
+                <!-- Mood Selector -->
+                <div class="form-group">
+                  <label id="mood-label">How are you feeling?</label>
+                  <div class="mood-selector" role="radiogroup" aria-labelledby="mood-label">
+                    <button type="button" class="mood-btn" data-mood="1" aria-label="Very bad mood" role="radio" aria-checked="false">😫</button>
+                    <button type="button" class="mood-btn" data-mood="2" aria-label="Bad mood" role="radio" aria-checked="false">😟</button>
+                    <button type="button" class="mood-btn" data-mood="3" aria-label="Neutral mood" role="radio" aria-checked="false">😐</button>
+                    <button type="button" class="mood-btn" data-mood="4" aria-label="Good mood" role="radio" aria-checked="false">🙂</button>
+                    <button type="button" class="mood-btn" data-mood="5" aria-label="Great mood" role="radio" aria-checked="false">😄</button>
+                  </div>
+                  <span class="error-msg" id="moodError" role="alert" aria-live="assertive"></span>
+                </div>
+
+                <!-- Stress Slider -->
+                <div class="form-group">
+                  <label for="stressLevel">Stress Level: <span id="stressValue" aria-live="polite">5</span>/10</label>
+                  <input type="range" id="stressLevel" min="1" max="10" value="5" aria-label="Stress level from 1 to 10">
+                  <div class="slider-labels"><span>Low</span><span>High</span></div>
+                </div>
+
+                <!-- Sleep & Study Row -->
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="sleepHours">Sleep (hours)</label>
+                    <input type="number" id="sleepHours" min="0" max="24" step="0.5" placeholder="7" aria-label="Hours of sleep last night">
+                  </div>
+                  <div class="form-group">
+                    <label for="studyHours">Study (hours)</label>
+                    <input type="number" id="studyHours" min="0" max="24" step="0.5" placeholder="6" aria-label="Hours studied today">
+                  </div>
+                </div>
+
+                <!-- Exam Type -->
+                <div class="form-group">
+                  <label for="examType">Exam Preparing For</label>
+                  <select id="examType" aria-label="Select your exam type">
+                    <option value="">Select exam...</option>
+                    <option value="NEET">NEET</option>
+                    <option value="JEE">JEE</option>
+                    <option value="CUET">CUET</option>
+                    <option value="CAT">CAT</option>
+                    <option value="GATE">GATE</option>
+                    <option value="UPSC">UPSC</option>
+                    <option value="Board Exams">Board Exams</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <!-- Journal Text -->
+                <div class="form-group">
+                  <label for="journalEntry">What's on your mind today?</label>
+                  <textarea id="journalEntry" rows="5" placeholder="Write freely about your day, feelings, study progress, worries, or anything on your mind..." aria-label="Journal entry text" maxlength="5000"></textarea>
+                  <div class="char-count"><span id="charCount">0</span>/5000</div>
+                  <span class="error-msg" id="entryError" role="alert" aria-live="assertive"></span>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn-primary" id="btnSubmitJournal" aria-label="Submit journal entry for AI analysis">
+                  <i data-lucide="sparkles" aria-hidden="true"></i>
+                  <span>Analyze with AI</span>
+                </button>
+              </form>
+            </div>
+
+            <!-- AI Analysis Results -->
+            <div class="journal-results">
+              <!-- Analysis Card -->
+              <div class="card analysis-card" id="analysisCard" aria-live="polite" style="display:none;">
+                <div class="card-header">
+                  <i data-lucide="brain" aria-hidden="true"></i>
+                  <h2>AI Wellness Insights</h2>
+                </div>
+                <div id="analysisContent" role="status"></div>
+              </div>
+
+              <!-- Loading State -->
+              <div class="card analysis-loading" id="analysisLoading" style="display:none;" role="status" aria-label="Analyzing your entry">
+                <div class="loader-ring"></div>
+                <p>Analyzing your entry...</p>
+              </div>
+
+              <!-- Past Entries -->
+              <div class="card past-entries-card">
+                <div class="card-header">
+                  <i data-lucide="history" aria-hidden="true"></i>
+                  <h2>Recent Entries</h2>
+                </div>
+                <div id="pastEntriesList" class="entries-list" aria-label="Past journal entries"></div>
+                <div id="noEntriesMsg" class="empty-state">
+                  <i data-lucide="notebook-pen" aria-hidden="true"></i>
+                  <p>No entries yet. Start journaling to track your wellness!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== VIEW: CHAT ===== -->
+        <section class="view-pane" id="view-chat" role="tabpanel" aria-labelledby="tab-chat" hidden>
+          <div class="chat-layout">
+            <div class="card chat-card">
+              <div class="card-header">
+                <i data-lucide="bot" aria-hidden="true"></i>
+                <h2>Wellness Companion</h2>
+                <span class="status-dot online" aria-label="AI companion is online"></span>
+              </div>
+
+              <!-- Crisis Banner (hidden by default) -->
+              <div class="crisis-banner" id="crisisBanner" role="alert" aria-live="assertive" style="display:none;">
+                <i data-lucide="alert-triangle" aria-hidden="true"></i>
+                <div class="crisis-content">
+                  <strong>You are not alone. Please reach out for help:</strong>
+                  <ul>
+                    <li>📞 iCall: <a href="tel:9152987821">9152987821</a></li>
+                    <li>📞 Vandrevala Foundation: <a href="tel:18602662345">1860-2662-345</a></li>
+                    <li>📞 AASRA: <a href="tel:9820466626">9820466626</a></li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Chat Messages -->
+              <div class="chat-messages" id="chatMessages" role="log" aria-live="polite" aria-label="Conversation messages">
+                <div class="chat-bubble ai">
+                  <div class="bubble-content">
+                    <p>Hi there! 👋 I'm your wellness companion. I'm here to listen, support, and help you navigate exam stress. How are you feeling today?</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Typing Indicator -->
+              <div class="typing-indicator" id="typingIndicator" style="display:none;" aria-label="AI is typing" role="status">
+                <span></span><span></span><span></span>
+              </div>
+
+              <!-- Chat Input -->
+              <div class="chat-input-area">
+                <label for="chatInput" class="sr-only">Type your message</label>
+                <textarea id="chatInput" rows="1" placeholder="Share what's on your mind..." aria-label="Chat message input" maxlength="5000"></textarea>
+                <button class="btn-send" id="btnSendChat" aria-label="Send message">
+                  <i data-lucide="send" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== VIEW: DASHBOARD ===== -->
+        <section class="view-pane" id="view-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" hidden>
+          <div class="dashboard-layout">
+
+            <!-- Stats Row -->
+            <div class="stats-row">
+              <div class="stat-card card">
+                <i data-lucide="smile" aria-hidden="true"></i>
+                <div class="stat-value" id="avgMood">--</div>
+                <div class="stat-label">Avg Mood</div>
+              </div>
+              <div class="stat-card card">
+                <i data-lucide="flame" aria-hidden="true"></i>
+                <div class="stat-value" id="streakStat">0</div>
+                <div class="stat-label">Day Streak</div>
+              </div>
+              <div class="stat-card card">
+                <i data-lucide="file-text" aria-hidden="true"></i>
+                <div class="stat-value" id="totalEntries">0</div>
+                <div class="stat-label">Total Entries</div>
+              </div>
+              <div class="stat-card card">
+                <i data-lucide="moon" aria-hidden="true"></i>
+                <div class="stat-value" id="avgSleep">--</div>
+                <div class="stat-label">Avg Sleep</div>
+              </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-row">
+              <div class="card chart-card">
+                <div class="card-header">
+                  <i data-lucide="trending-up" aria-hidden="true"></i>
+                  <h2>Mood Trend</h2>
+                  <div class="chart-toggle" role="radiogroup" aria-label="Chart time range">
+                    <button class="toggle-btn active" data-range="7" role="radio" aria-checked="true">7 Days</button>
+                    <button class="toggle-btn" data-range="30" role="radio" aria-checked="false">30 Days</button>
+                  </div>
+                </div>
+                <div class="chart-area" id="moodChart" aria-label="Mood trend chart" role="img"></div>
+              </div>
+
+              <div class="card chart-card">
+                <div class="card-header">
+                  <i data-lucide="grid-3x3" aria-hidden="true"></i>
+                  <h2>Stress Heatmap</h2>
+                </div>
+                <div class="heatmap-area" id="stressHeatmap" aria-label="Stress heatmap by day of week" role="img"></div>
+              </div>
+            </div>
+
+            <!-- AI Weekly Insights -->
+            <div class="card insights-card">
+              <div class="card-header">
+                <i data-lucide="lightbulb" aria-hidden="true"></i>
+                <h2>AI Weekly Insights</h2>
+                <button class="btn-ghost" id="btnRefreshInsights" aria-label="Refresh weekly insights">
+                  <i data-lucide="refresh-cw" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div id="weeklyInsightsContent" aria-live="polite">
+                <div class="empty-state">
+                  <p>Log at least 3 entries this week to unlock AI-powered pattern insights.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== VIEW: MINDFULNESS ===== -->
+        <section class="view-pane" id="view-mindfulness" role="tabpanel" aria-labelledby="tab-mindfulness" hidden>
+          <div class="mindfulness-layout">
+
+            <!-- Breathing Exercise -->
+            <div class="card breathing-card">
+              <div class="card-header">
+                <i data-lucide="wind" aria-hidden="true"></i>
+                <h2>Breathing Exercise</h2>
+              </div>
+              <div class="breathing-selector" role="radiogroup" aria-label="Select breathing technique">
+                <button class="technique-btn active" data-technique="478" role="radio" aria-checked="true">4-7-8</button>
+                <button class="technique-btn" data-technique="box" role="radio" aria-checked="false">Box</button>
+                <button class="technique-btn" data-technique="deep" role="radio" aria-checked="false">Deep Calm</button>
+              </div>
+              <div class="breathing-visual">
+                <div class="breath-circle" id="breathCircle" aria-live="polite">
+                  <span class="breath-text" id="breathText">Ready</span>
+                  <span class="breath-timer" id="breathTimer"></span>
+                </div>
+              </div>
+              <button class="btn-primary" id="btnStartBreathing" aria-label="Start breathing exercise">
+                <i data-lucide="play" aria-hidden="true"></i>
+                <span>Begin</span>
+              </button>
+            </div>
+
+            <!-- Grounding Exercise -->
+            <div class="card grounding-card">
+              <div class="card-header">
+                <i data-lucide="anchor" aria-hidden="true"></i>
+                <h2>5-4-3-2-1 Grounding</h2>
+              </div>
+              <p class="grounding-desc">A sensory awareness technique to anchor you in the present moment.</p>
+              <div id="groundingSteps" class="grounding-steps" aria-live="polite">
+                <div class="grounding-step" data-step="5">
+                  <span class="step-num">5</span>
+                  <span class="step-text">things you can <strong>see</strong></span>
+                </div>
+                <div class="grounding-step" data-step="4">
+                  <span class="step-num">4</span>
+                  <span class="step-text">things you can <strong>touch</strong></span>
+                </div>
+                <div class="grounding-step" data-step="3">
+                  <span class="step-num">3</span>
+                  <span class="step-text">things you can <strong>hear</strong></span>
+                </div>
+                <div class="grounding-step" data-step="2">
+                  <span class="step-num">2</span>
+                  <span class="step-text">things you can <strong>smell</strong></span>
+                </div>
+                <div class="grounding-step" data-step="1">
+                  <span class="step-num">1</span>
+                  <span class="step-text">thing you can <strong>taste</strong></span>
+                </div>
+              </div>
+              <button class="btn-primary" id="btnStartGrounding" aria-label="Start grounding exercise">
+                <i data-lucide="play" aria-hidden="true"></i>
+                <span>Start Exercise</span>
+              </button>
+            </div>
+
+            <!-- Pomodoro Timer -->
+            <div class="card pomodoro-card">
+              <div class="card-header">
+                <i data-lucide="timer" aria-hidden="true"></i>
+                <h2>Study Timer</h2>
+              </div>
+              <div class="pomodoro-display">
+                <div class="pomodoro-ring" id="pomodoroRing">
+                  <span class="pomodoro-time" id="pomodoroTime" aria-live="polite">25:00</span>
+                  <span class="pomodoro-label" id="pomodoroLabel">Focus Time</span>
+                </div>
+              </div>
+              <div class="pomodoro-controls">
+                <button class="btn-primary" id="btnStartPomodoro" aria-label="Start study timer">
+                  <i data-lucide="play" aria-hidden="true"></i><span>Start</span>
+                </button>
+                <button class="btn-ghost" id="btnResetPomodoro" aria-label="Reset timer">
+                  <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Reset</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Motivational Quote -->
+            <div class="card quote-card">
+              <div class="card-header">
+                <i data-lucide="quote" aria-hidden="true"></i>
+                <h2>Daily Motivation</h2>
+              </div>
+              <blockquote id="quoteContent" aria-live="polite">
+                <p>"The expert in anything was once a beginner."</p>
+                <cite>— Helen Hayes</cite>
+              </blockquote>
+              <button class="btn-ghost" id="btnNewQuote" aria-label="Get a new motivational quote">
+                <i data-lucide="refresh-cw" aria-hidden="true"></i><span>New Quote</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== VIEW: PROFILE ===== -->
+        <section class="view-pane" id="view-profile" role="tabpanel" aria-labelledby="tab-profile" hidden>
+          <div class="profile-layout">
+
+            <div class="card">
+              <div class="card-header">
+                <i data-lucide="calendar" aria-hidden="true"></i>
+                <h2>Exam Countdown</h2>
+              </div>
+              <div class="form-group">
+                <label for="examDateInput">Your Exam Date</label>
+                <input type="date" id="examDateInput" aria-label="Set your exam date">
+              </div>
+              <div class="countdown-display" id="countdownDisplay" aria-live="polite">
+                <p>Set your exam date to see the countdown.</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <i data-lucide="settings" aria-hidden="true"></i>
+                <h2>Settings & Data</h2>
+              </div>
+              <div class="settings-actions">
+                <button class="btn-secondary" id="btnExportData" aria-label="Export all journal data as JSON">
+                  <i data-lucide="download" aria-hidden="true"></i><span>Export Data (JSON)</span>
+                </button>
+                <button class="btn-danger" id="btnClearData" aria-label="Clear all saved data">
+                  <i data-lucide="trash-2" aria-hidden="true"></i><span>Clear All Data</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="card disclaimer-card">
+              <div class="card-header">
+                <i data-lucide="info" aria-hidden="true"></i>
+                <h2>About Optezum</h2>
+              </div>
+              <p>Optezum is an AI-powered wellness companion designed to help students manage exam stress. It uses Google Gemini AI to analyze journal entries and provide personalized support.</p>
+              <div class="disclaimer" role="note">
+                <strong>⚠️ Disclaimer:</strong> Optezum is NOT a substitute for professional mental health care. If you are experiencing a crisis, please contact a professional immediately.
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- Persistent Crisis Footer -->
+      <footer class="app-footer" role="contentinfo">
+        <p>Need help? <strong>iCall:</strong> <a href="tel:9152987821">9152987821</a> · <strong>Vandrevala:</strong> <a href="tel:18602662345">1860-2662-345</a> · <strong>AASRA:</strong> <a href="tel:9820466626">9820466626</a></p>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/utils/sanitizer.js"></script>
+  <script src="js/utils/validators.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/journal.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/mindfulness.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

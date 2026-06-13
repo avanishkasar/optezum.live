@@ -1,0 +1,32 @@
+{
+  "name": "optezum",
+  "version": "1.0.0",
+  "description": "Optezum — AI-Powered Mental Wellness Tracker for Students preparing for NEET, JEE, CUET, CAT, GATE, UPSC",
+  "main": "src/server/server.js",
+  "scripts": {
+    "start": "node src/server/server.js",
+    "dev": "node --watch src/server/server.js",
+    "test": "jest --verbose --coverage",
+    "lint": "eslint src/ tests/"
+  },
+  "keywords": ["mental-health", "wellness", "student", "ai", "gemini", "journaling", "mood-tracker"],
+  "author": "Avanish Kasar",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "@google/generative-ai": "^0.21.0",
+    "dotenv": "^16.4.5",
+    "helmet": "^8.0.0",
+    "express-rate-limit": "^7.4.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "supertest": "^7.0.0",
+    "eslint": "^8.57.0"
+  }
+}
