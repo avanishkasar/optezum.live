@@ -1,0 +1,25 @@
+{
+  "name": "mental-wellness-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "node src/server/server.js",
+    "dev": "nodemon src/server/server.js",
+    "test": "jest --verbose --coverage"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "@google/generative-ai": "^0.21.0",
+    "dotenv": "^16.4.5",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.2.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "supertest": "^6.3.4",
+    "eslint": "^8.57.0",
+    "nodemon": "^2.0.22"
+  }
+}
