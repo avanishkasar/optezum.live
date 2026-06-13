@@ -6,10 +6,38 @@
  */
 
 
-/** @type {'7' | '30'} Current chart range selection. */
-let chartRange = '7';
+/** @type {string} Current chart range selection in days. */
+let chartRange = String(
+  (typeof window !== 'undefined' && window.APP_CONSTANTS)
+    ? window.APP_CONSTANTS.UI.CHART_RANGE_SHORT_DAYS
+    : 7,
+);
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+/**
+ * @returns {import('../../../shared/constants').UI} UI constants with fallbacks.
+ */
+function getUiConstants() {
+  return window.APP_CONSTANTS?.UI ?? {
+    CHART_RANGE_SHORT_DAYS: 7,
+    CHART_RANGE_LONG_DAYS: 30,
+    CHART_WIDTH: 560,
+    CHART_HEIGHT: 200,
+    CHART_PADDING: 40,
+    MOOD_CHART_MIN_ENTRIES: 2,
+    DAYS_PER_WEEK: 7,
+    DEFAULT_RECENT_ENTRIES_DAYS: 7,
+  };
+}
+
+/**
+ * @returns {{ MIN_MOOD: number, MAX_MOOD: number }} Mood validation bounds.
+ */
+function getMoodBounds() {
+  const v = window.APP_CONSTANTS?.VALIDATION;
+  return { MIN_MOOD: v?.MIN_MOOD ?? 1, MAX_MOOD: v?.MAX_MOOD ?? 5 };
+}
 
 /**
  * Initializes the dashboard — renders all charts and stats,
@@ -53,12 +81,15 @@ function setupInsightsRefresh() {
  * @returns {void}
  */
 function setupRangeToggle() {
+  const ui = getUiConstants();
+  const shortDays = String(ui.CHART_RANGE_SHORT_DAYS);
+  const longDays = String(ui.CHART_RANGE_LONG_DAYS);
   const toggle7 = document.getElementById('range-7');
   const toggle30 = document.getElementById('range-30');
 
   if (toggle7) {
     toggle7.addEventListener('click', () => {
-      chartRange = '7';
+      chartRange = shortDays;
       toggle7.classList.add('active');
       toggle30?.classList.remove('active');
       toggle7.setAttribute('aria-checked', 'true');
@@ -69,7 +100,7 @@ function setupRangeToggle() {
 
   if (toggle30) {
     toggle30.addEventListener('click', () => {
-      chartRange = '30';
+      chartRange = longDays;
       toggle30.classList.add('active');
       toggle7?.classList.remove('active');
       toggle30.setAttribute('aria-checked', 'true');
@@ -92,19 +123,21 @@ function renderMoodChart(entries) {
     container.removeChild(container.firstChild);
   }
 
-  if (entries.length < 2) {
+  if (entries.length < getUiConstants().MOOD_CHART_MIN_ENTRIES) {
     const msg = document.createElement('p');
     msg.className = 'chart-empty';
-    msg.textContent = 'Need at least 2 entries to show mood trends.';
+    msg.textContent = `Need at least ${getUiConstants().MOOD_CHART_MIN_ENTRIES} entries to show mood trends.`;
     container.appendChild(msg);
     return;
   }
 
   const sorted = [...entries].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-  const ui = window.APP_CONSTANTS?.UI ?? {};
-  const width = ui.CHART_WIDTH ?? 560;
-  const height = ui.CHART_HEIGHT ?? 200;
-  const padding = ui.CHART_PADDING ?? 40;
+  const ui = getUiConstants();
+  const { MIN_MOOD, MAX_MOOD } = getMoodBounds();
+  const width = ui.CHART_WIDTH;
+  const height = ui.CHART_HEIGHT;
+  const padding = ui.CHART_PADDING;
+  const moodSpan = MAX_MOOD - MIN_MOOD;
 
   const svgNS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(svgNS, 'svg');
@@ -117,8 +150,8 @@ function renderMoodChart(entries) {
   title.textContent = `Mood trend over last ${chartRange} days`;
   svg.appendChild(title);
 
-  for (let i = 1; i <= 5; i++) {
-    const y = height - padding - ((i - 1) / 4) * (height - 2 * padding);
+  for (let i = MIN_MOOD; i <= MAX_MOOD; i++) {
+    const y = height - padding - ((i - MIN_MOOD) / moodSpan) * (height - 2 * padding);
     const line = document.createElementNS(svgNS, 'line');
     line.setAttribute('x1', padding);
     line.setAttribute('y1', y);
@@ -140,7 +173,7 @@ function renderMoodChart(entries) {
 
   const points = sorted.map((entry, idx) => {
     const x = padding + (idx / (sorted.length - 1)) * (width - 2 * padding);
-    const y = height - padding - ((entry.mood - 1) / 4) * (height - 2 * padding);
+    const y = height - padding - ((entry.mood - MIN_MOOD) / moodSpan) * (height - 2 * padding);
     return { x, y, entry };
   });
 
@@ -232,7 +265,7 @@ function renderStressHeatmap(entries) {
     return;
   }
 
-  const dayBuckets = Array.from({ length: 7 }, () => []);
+  const dayBuckets = Array.from({ length: getUiConstants().DAYS_PER_WEEK }, () => []);
   entries.forEach((entry) => {
     const stress = entry.stress ?? entry.stressLevel;
     if (typeof stress !== 'number') return;
@@ -409,7 +442,7 @@ async function requestWeeklyInsights() {
   const container = document.getElementById('weeklyInsightsContent');
   if (!container) return;
 
-  const recent = getRecentEntries(7);
+  const recent = getRecentEntries(getUiConstants().DEFAULT_RECENT_ENTRIES_DAYS);
   if (recent.length < 3) {
     while (container.firstChild) container.removeChild(container.firstChild);
     const msg = document.createElement('p');

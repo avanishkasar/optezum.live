@@ -141,6 +141,7 @@ textarea:focus-visible, select:focus-visible {
   border-bottom: 1px solid var(--border);
 }
 .brand-icon { width: 28px; height: 28px; color: var(--accent); }
+[data-lucide] { width: var(--icon-size, 20px); height: var(--icon-size, 20px); flex-shrink: 0; }
 .brand-name {
   font-family: var(--font-heading);
   font-weight: 700;

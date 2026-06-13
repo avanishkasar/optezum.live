@@ -1,3 +1,6 @@
+/**
+ * @description Express application entry point — static assets, API routes, SPA fallback, error handler.
+ */
 'use strict';
 
 require('dotenv').config();
@@ -67,10 +70,7 @@ const PORT = process.env.PORT || SERVER.DEFAULT_PORT;
 
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
-    // eslint-disable-next-line no-console -- startup logging
-    console.log(`✅ Optezum server running on http://localhost:${PORT}`);
-    // eslint-disable-next-line no-console -- startup logging
-    console.log(`📁 Serving static files from ${publicPath}`);
+    process.stdout.write(`Optezum server running on http://localhost:${PORT}\n`);
   });
 }
 

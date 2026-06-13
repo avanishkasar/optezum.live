@@ -18,6 +18,7 @@ const { HTTP_STATUS, SERVER } = require('../../shared/constants');
 
 /**
  * Creates the Optezum API router with per-route rate limiting.
+ * @description Registers analyze-journal, chat, weekly-insights, coping-strategy, and health routes.
  * @param {import('express').RequestHandler} analyzeLimiter - Stricter limiter for journal analysis.
  * @param {import('express').RequestHandler} chatLimiter - Stricter limiter for chat companion.
  * @returns {import('express').Router} Configured Express router.

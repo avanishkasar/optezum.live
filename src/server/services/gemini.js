@@ -7,7 +7,9 @@ const {
   GEMINI,
   CRISIS_HELPLINES,
   CRISIS_KEYWORDS,
+  CACHE,
 } = require('../../shared/constants');
+const { getCacheKey, getFromCache, setCache, clearCache } = require('../utils/cache');
 
 /**
  * Hardcoded crisis response with Indian mental-health helplines.
@@ -115,6 +117,17 @@ async function analyzeJournalEntry(entry, mood, stressLevel, sleepHours, studyHo
   }
 
   const safeExamType = sanitizeForGemini(examType || 'Not specified');
+  const cacheKey = getCacheKey('journal', {
+    entry: safeEntry,
+    mood,
+    stressLevel,
+    sleepHours: sleepHours ?? null,
+    studyHours: studyHours ?? null,
+    examType: safeExamType,
+  });
+  const cached = getFromCache(cacheKey);
+  if (cached) return cached;
+
   const userPrompt = `Journal Entry: "${safeEntry}"
 Mood: ${mood}
 Stress Level: ${stressLevel}/10
@@ -129,9 +142,13 @@ Exam: ${safeExamType}`;
 
   const text = result.response.text();
   try {
-    return JSON.parse(text);
+    const parsed = JSON.parse(text);
+    setCache(cacheKey, parsed, CACHE.JOURNAL_ANALYSIS_TTL_MS);
+    return parsed;
   } catch {
-    return { rawResponse: text };
+    const fallback = { rawResponse: text };
+    setCache(cacheKey, fallback, CACHE.JOURNAL_ANALYSIS_TTL_MS);
+    return fallback;
   }
 }
 
@@ -253,4 +270,5 @@ module.exports = {
   sanitizeForGemini,
   CRISIS_KEYWORDS,
   CRISIS_RESPONSE,
+  clearJournalAnalysisCache: clearCache,
 };

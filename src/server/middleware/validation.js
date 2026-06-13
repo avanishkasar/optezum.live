@@ -125,7 +125,8 @@ function validateWeeklyInput(req, res, next) {
  */
 function validateCopingInput(req, res, next) {
   try {
-    let { stressType, examType, type } = req.body || {};
+    const { stressType: rawStressType, examType, type } = req.body || {};
+    let stressType = rawStressType;
 
     if (!stressType && type) {
       stressType = type;

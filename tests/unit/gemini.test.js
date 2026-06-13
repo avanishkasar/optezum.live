@@ -51,6 +51,7 @@ const {
   sanitizeForGemini,
   CRISIS_KEYWORDS,
   CRISIS_RESPONSE,
+  clearJournalAnalysisCache,
 } = require('../../src/server/services/gemini');
 
 describe('Gemini AI Service', () => {
@@ -131,6 +132,10 @@ describe('Gemini AI Service', () => {
   });
 
   describe('analyzeJournalEntry', () => {
+    beforeEach(() => {
+      clearJournalAnalysisCache();
+    });
+
     test('should return structured analysis for a journal entry', async () => {
       const result = await analyzeJournalEntry(
         'I studied for 8 hours today but still feel unprepared for NEET.',
@@ -157,6 +162,19 @@ describe('Gemini AI Service', () => {
       } catch (err) {
         expect(err).toBeDefined();
       }
+    });
+
+    test('should serve cached result for identical journal analysis', async () => {
+      const { GoogleGenerativeAI } = require('@google/generative-ai');
+      const model = new GoogleGenerativeAI('test').getGenerativeModel({ model: 'gemini-2.5-flash' });
+      model.generateContent.mockClear();
+
+      const args = ['Same journal text for cache test', 'calm', 4, 7, 6, 'NEET'];
+      const first = await analyzeJournalEntry(...args);
+      const second = await analyzeJournalEntry(...args);
+
+      expect(second).toEqual(first);
+      expect(model.generateContent).toHaveBeenCalledTimes(1);
     });
   });
 

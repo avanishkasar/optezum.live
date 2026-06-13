@@ -99,11 +99,22 @@ const UI = {
   CHART_WIDTH: 560,
   CHART_HEIGHT: 200,
   CHART_PADDING: 40,
+  CHART_RANGE_SHORT_DAYS: 7,
+  CHART_RANGE_LONG_DAYS: 30,
+  DEFAULT_RECENT_ENTRIES_DAYS: 7,
+  DAYS_PER_WEEK: 7,
+  MOOD_CHART_MIN_ENTRIES: 2,
   MS_PER_DAY: 86400000,
   MS_PER_HOUR: 3600000,
   POMODORO_WORK_MINUTES: 25,
   POMODORO_BREAK_MINUTES: 5,
   LUCIDE_DEBOUNCE_MS: 80,
+  ICON_SIZE_PX: 20,
+};
+
+/** Server-side in-memory cache TTL settings. @type {object} */
+const CACHE = {
+  JOURNAL_ANALYSIS_TTL_MS: 5 * 60 * 1000,
 };
 
 const exportsObject = {
@@ -118,6 +129,7 @@ const exportsObject = {
   EXAM_TYPES,
   HTTP_STATUS,
   UI,
+  CACHE,
 };
 
 if (typeof module !== 'undefined' && module.exports) {

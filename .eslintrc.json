@@ -27,6 +27,54 @@
       "rules": {
         "no-console": "off"
       }
+    },
+    {
+      "files": ["src/public/js/**/*.js"],
+      "excludedFiles": ["src/public/js/utils/**"],
+      "globals": {
+        "initJournal": "readonly",
+        "initChat": "readonly",
+        "initDashboard": "readonly",
+        "initMindfulness": "readonly",
+        "getEntries": "readonly",
+        "getRecentEntries": "readonly",
+        "saveEntry": "readonly",
+        "getSettings": "readonly",
+        "saveSettings": "readonly",
+        "clearAllData": "readonly",
+        "deleteEntry": "readonly",
+        "calculateStreak": "readonly",
+        "updateStreak": "readonly",
+        "renderPastEntries": "readonly",
+        "escapeHtml": "readonly",
+        "sanitizeInput": "readonly",
+        "validateJournalForm": "readonly",
+        "validateChatMessage": "readonly",
+        "lucide": "readonly"
+      },
+      "rules": {
+        "no-unused-vars": ["warn", {
+          "varsIgnorePattern": "^(initJournal|initChat|initDashboard|initMindfulness)$",
+          "argsIgnorePattern": "^_"
+        }]
+      }
+    },
+    {
+      "files": ["src/public/js/utils/validators-browser.js"],
+      "globals": {
+        "ValidationCore": "readonly"
+      },
+      "rules": {
+        "no-unused-vars": ["warn", {
+          "varsIgnorePattern": "^(validateJournalForm|validateChatMessage)$"
+        }]
+      }
+    },
+    {
+      "files": ["src/public/js/storage.js"],
+      "rules": {
+        "no-console": "error"
+      }
     }
   ]
 }

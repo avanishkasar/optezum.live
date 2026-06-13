@@ -17,8 +17,9 @@
   <!-- Icons (pinned version, deferred) -->
   <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="css/style.css">
+  <!-- Styles (non-blocking load) -->
+  <link rel="preload" href="css/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="css/style.css"></noscript>
 </head>
 <body>
   <!-- Skip Navigation — Accessibility -->

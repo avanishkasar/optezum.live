@@ -7,7 +7,7 @@
 
 
 /** @type {{ role: string, content: string }[]} Conversation history for context. */
-let conversationHistory = [];
+const conversationHistory = [];
 
 /** @type {boolean} Whether a message is currently being sent. */
 let isSending = false;

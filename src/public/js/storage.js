@@ -7,6 +7,27 @@
 const ENTRIES_KEY = 'optezum_entries';
 const SETTINGS_KEY = 'optezum_settings';
 
+/** @returns {number} Default recent-entries lookback in days. */
+function getDefaultRecentDays() {
+  if (typeof window !== 'undefined' && window.APP_CONSTANTS) {
+    return window.APP_CONSTANTS.UI.DEFAULT_RECENT_ENTRIES_DAYS;
+  }
+  return 7;
+}
+
+/** @returns {{ examType: string, examDate: string, pomodoroWork: number, pomodoroBreak: number }} Default settings. */
+function getDefaultSettings() {
+  const ui = (typeof window !== 'undefined' && window.APP_CONSTANTS)
+    ? window.APP_CONSTANTS.UI
+    : null;
+  return {
+    examType: 'NEET',
+    examDate: '',
+    pomodoroWork: ui?.POMODORO_WORK_MINUTES ?? 25,
+    pomodoroBreak: ui?.POMODORO_BREAK_MINUTES ?? 5,
+  };
+}
+
 /**
  * Saves a journal entry to localStorage with an auto-generated ID and timestamp.
  * @param {object} entry - The journal entry data (mood, stress, sleepHours, etc.).
@@ -15,7 +36,6 @@ const SETTINGS_KEY = 'optezum_settings';
 function saveEntry(entry) {
   try {
     if (!entry || typeof entry !== 'object') {
-      console.error('[Storage] Invalid entry data.');
       return null;
     }
     const entries = getEntries();
@@ -27,8 +47,7 @@ function saveEntry(entry) {
     entries.unshift(newEntry);
     localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries));
     return newEntry;
-  } catch (err) {
-    console.error('[Storage] Failed to save entry:', err);
+  } catch {
     return null;
   }
 }
@@ -43,29 +62,24 @@ function getEntries() {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
-  } catch (err) {
-    console.error('[Storage] Failed to read entries:', err);
+  } catch {
     return [];
   }
 }
 
 /**
  * Retrieves journal entries from the last N days.
- * @param {number} days - Number of days to look back.
+ * @param {number} [days] - Number of days to look back (defaults to UI constant).
  * @returns {object[]} Array of entries within the specified timeframe.
  */
 function getRecentEntries(days) {
   try {
-    if (typeof days !== 'number' || days < 1) {
-      console.error('[Storage] Invalid days parameter.');
-      return [];
-    }
+    const lookback = (typeof days === 'number' && days >= 1) ? days : getDefaultRecentDays();
     const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - days);
+    cutoff.setDate(cutoff.getDate() - lookback);
     const entries = getEntries();
     return entries.filter((e) => new Date(e.timestamp) >= cutoff);
-  } catch (err) {
-    console.error('[Storage] Failed to get recent entries:', err);
+  } catch {
     return [];
   }
 }
@@ -78,7 +92,6 @@ function getRecentEntries(days) {
 function deleteEntry(id) {
   try {
     if (!id || typeof id !== 'string') {
-      console.error('[Storage] Invalid entry ID.');
       return false;
     }
     const entries = getEntries();
@@ -86,8 +99,7 @@ function deleteEntry(id) {
     if (filtered.length === entries.length) return false;
     localStorage.setItem(ENTRIES_KEY, JSON.stringify(filtered));
     return true;
-  } catch (err) {
-    console.error('[Storage] Failed to delete entry:', err);
+  } catch {
     return false;
   }
 }
@@ -101,8 +113,7 @@ function clearAllData() {
     localStorage.removeItem(ENTRIES_KEY);
     localStorage.removeItem(SETTINGS_KEY);
     return true;
-  } catch (err) {
-    console.error('[Storage] Failed to clear data:', err);
+  } catch {
     return false;
   }
 }
@@ -115,17 +126,11 @@ function getSettings() {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (!raw) {
-      return {
-        examType: 'NEET',
-        examDate: '',
-        pomodoroWork: 25,
-        pomodoroBreak: 5,
-      };
+      return getDefaultSettings();
     }
     return JSON.parse(raw);
-  } catch (err) {
-    console.error('[Storage] Failed to read settings:', err);
-    return { examType: 'NEET', examDate: '', pomodoroWork: 25, pomodoroBreak: 5 };
+  } catch {
+    return getDefaultSettings();
   }
 }
 
@@ -137,18 +142,15 @@ function getSettings() {
 function saveSettings(settings) {
   try {
     if (!settings || typeof settings !== 'object') {
-      console.error('[Storage] Invalid settings data.');
       return false;
     }
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     return true;
-  } catch (err) {
-    console.error('[Storage] Failed to save settings:', err);
+  } catch {
     return false;
   }
 }
 
-// Export for Node.js testing
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { saveEntry, getEntries, getRecentEntries, deleteEntry, clearAllData, getSettings, saveSettings };
 }

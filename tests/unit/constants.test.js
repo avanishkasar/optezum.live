@@ -33,5 +33,11 @@ describe('Shared Constants', () => {
     expect(constants.UI.CHART_WIDTH).toBeGreaterThan(0);
     expect(constants.UI.STREAK_MAX_LOOKBACK_DAYS).toBe(365);
     expect(constants.UI.LUCIDE_DEBOUNCE_MS).toBeGreaterThan(0);
+    expect(constants.UI.CHART_RANGE_SHORT_DAYS).toBe(7);
+    expect(constants.UI.CHART_RANGE_LONG_DAYS).toBe(30);
+  });
+
+  test('should export cache TTL constants', () => {
+    expect(constants.CACHE.JOURNAL_ANALYSIS_TTL_MS).toBeGreaterThan(0);
   });
 });
