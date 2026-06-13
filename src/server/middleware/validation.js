@@ -159,6 +159,9 @@ function validateWeeklyInput(req, res, next) {
       if (e && typeof e.entry === 'string') {
         e.entry = cleanInput(e.entry);
       }
+      if (e && typeof e.journalText === 'string') {
+        e.journalText = cleanInput(e.journalText);
+      }
       if (e && typeof e.text === 'string') {
         e.text = cleanInput(e.text);
       }

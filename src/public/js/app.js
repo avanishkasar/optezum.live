@@ -153,7 +153,7 @@ function updateStreak() {
  * Set today's date on the journal form
  */
 function setTodayDate() {
-  const dateEl = document.getElementById('journalDate');
+  const dateEl = document.getElementById('journal-date');
   if (dateEl) {
     const today = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -164,6 +164,17 @@ function setTodayDate() {
 /* ========================================
    PROFILE: EXPORT, CLEAR, COUNTDOWN
    ======================================== */
+
+/** Default syllabus subjects by exam type. @type {Record<string, string[]>} */
+const SYLLABUS_SUBJECTS = {
+  NEET: ['Physics', 'Chemistry', 'Biology'],
+  JEE: ['Physics', 'Chemistry', 'Mathematics'],
+  CUET: ['Language', 'Domain Subject', 'General Test'],
+  CAT: ['VARC', 'DILR', 'Quantitative Aptitude'],
+  GATE: ['Engineering Maths', 'Core Subject', 'Aptitude'],
+  UPSC: ['Prelims GS', 'CSAT', 'Optional Subject'],
+  default: ['Subject 1', 'Subject 2', 'Subject 3'],
+};
 
 /**
  * Initialize profile view features
@@ -220,6 +231,99 @@ function initProfile() {
       updateCountdown(date);
     });
   }
+
+  initSyllabusProgress();
+  initAnxietyAssessment();
+}
+
+/**
+ * Renders and persists syllabus progress sliders.
+ * @returns {void}
+ */
+function initSyllabusProgress() {
+  const container = document.getElementById('syllabusProgress');
+  if (!container || typeof getSettings !== 'function') return;
+
+  const settings = getSettings();
+  const examType = settings.examType || 'NEET';
+  const subjects = SYLLABUS_SUBJECTS[examType] || SYLLABUS_SUBJECTS.default;
+  if (!settings.syllabusProgress) settings.syllabusProgress = {};
+
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  subjects.forEach((subject) => {
+    const value = settings.syllabusProgress[subject] ?? 0;
+
+    const row = document.createElement('div');
+    row.className = 'syllabus-row';
+
+    const label = document.createElement('label');
+    label.textContent = `${subject}: ${value}%`;
+    label.setAttribute('for', `syllabus-${subject.replace(/\s+/g, '-')}`);
+
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = '0';
+    slider.max = '100';
+    slider.value = String(value);
+    slider.id = `syllabus-${subject.replace(/\s+/g, '-')}`;
+    slider.setAttribute('aria-label', `${subject} syllabus progress`);
+
+    slider.addEventListener('input', () => {
+      const pct = parseInt(slider.value, 10);
+      label.textContent = `${subject}: ${pct}%`;
+      settings.syllabusProgress[subject] = pct;
+      if (typeof saveSettings === 'function') saveSettings(settings);
+    });
+
+    row.appendChild(label);
+    row.appendChild(slider);
+    container.appendChild(row);
+  });
+}
+
+/**
+ * Handles pre-exam anxiety self-assessment form.
+ * @returns {void}
+ */
+function initAnxietyAssessment() {
+  const form = document.getElementById('anxiety-form');
+  const resultEl = document.getElementById('anxietyResult');
+  if (!form || !resultEl) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const scores = [1, 2, 3, 4, 5].map((i) => {
+      const el = document.getElementById(`anxiety-q${i}`);
+      return el ? parseInt(el.value, 10) : 3;
+    });
+    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const level = avg <= 2 ? 'Low' : avg <= 3.5 ? 'Moderate' : 'High';
+
+    resultEl.textContent = `Your anxiety level: ${level} (${avg.toFixed(1)}/5). Generating personalized tips...`;
+
+    try {
+      const settings = typeof getSettings === 'function' ? getSettings() : {};
+      const response = await fetch('/api/coping-strategy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stressType: `pre-exam anxiety (${level.toLowerCase()})`,
+          examType: settings.examType || 'NEET',
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const tip = data.motivationalMessage || data.quote || data.text || 'Try a breathing exercise and break your study into smaller chunks.';
+        resultEl.textContent = `Anxiety level: ${level} (${avg.toFixed(1)}/5). ${tip}`;
+      } else {
+        resultEl.textContent = `Anxiety level: ${level} (${avg.toFixed(1)}/5). Consider a mindfulness exercise or talking to your wellness companion.`;
+      }
+    } catch {
+      resultEl.textContent = `Anxiety level: ${level} (${avg.toFixed(1)}/5). Consider a mindfulness exercise or talking to your wellness companion.`;
+    }
+  });
 }
 
 /**
@@ -235,7 +339,12 @@ function updateCountdown(dateStr) {
   const diff = examDate - now;
 
   if (diff <= 0) {
-    display.innerHTML = '<p style="color: var(--accent); font-weight: 600;">Exam day has arrived! You've got this! 💪</p>';
+    display.textContent = '';
+    const msg = document.createElement('p');
+    msg.style.color = 'var(--accent)';
+    msg.style.fontWeight = '600';
+    msg.textContent = 'Exam day has arrived! You\'ve got this! 💪';
+    display.appendChild(msg);
     return;
   }
 

@@ -273,8 +273,8 @@ function startPomodoro() {
   if (startBtn) startBtn.classList.add('hidden');
   if (stopBtn) stopBtn.classList.remove('hidden');
 
-  const workDuration = 25 * 60;
-  const breakDuration = 5 * 60;
+  const workDuration = (typeof getSettings === 'function' ? getSettings().pomodoroWork : 25) * 60;
+  const breakDuration = (typeof getSettings === 'function' ? getSettings().pomodoroBreak : 5) * 60;
   let remaining = isBreakPhase ? breakDuration : workDuration;
 
   if (statusLabel) {
@@ -340,7 +340,8 @@ function resetPomodoro() {
   isBreakPhase = false;
   const timerDisplay = document.getElementById('pomodoro-display');
   const statusLabel = document.getElementById('pomodoro-status');
-  if (timerDisplay) timerDisplay.textContent = '25:00';
+  const settings = typeof getSettings === 'function' ? getSettings() : { pomodoroWork: 25 };
+  if (timerDisplay) timerDisplay.textContent = `${String(settings.pomodoroWork).padStart(2, '0')}:00`;
   if (statusLabel) statusLabel.textContent = 'Ready to focus';
 }
 
@@ -382,10 +383,12 @@ async function fetchMotivationalQuote() {
   ];
 
   try {
+    const settings = typeof getSettings === 'function' ? getSettings() : {};
+    const examType = settings.examType || 'NEET';
     const response = await fetch('/api/coping-strategy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'motivational-quote' }),
+      body: JSON.stringify({ type: 'motivational-quote', stressType: 'motivational-quote', examType }),
     });
 
     if (response.ok) {

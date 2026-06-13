@@ -156,6 +156,12 @@
                 <!-- Journal Text -->
                 <div class="form-group">
                   <label for="journal-text">What's on your mind today?</label>
+                  <div class="reflection-prompt-row">
+                    <button type="button" class="btn-ghost" id="reflection-prompt-btn" aria-label="Get a post-study reflection prompt">
+                      <i data-lucide="lightbulb" aria-hidden="true"></i>
+                      <span>Reflection Prompt</span>
+                    </button>
+                  </div>
                   <textarea id="journal-text" rows="5" placeholder="Write freely about your day, feelings, study progress, worries, or anything on your mind..." aria-label="Journal entry text" maxlength="5000"></textarea>
                   <div class="char-count"><span id="charCount">0</span>/5000</div>
                   <span class="error-msg" id="journal-error" role="alert" aria-live="assertive"></span>
@@ -191,6 +197,10 @@
                 <div class="card-header">
                   <i data-lucide="history" aria-hidden="true"></i>
                   <h2>Recent Entries</h2>
+                </div>
+                <div class="form-group entry-search-wrap">
+                  <label for="entry-search" class="sr-only">Search past entries</label>
+                  <input type="search" id="entry-search" placeholder="Search past entries..." aria-label="Search past entries">
                 </div>
                 <div id="past-entries" class="entries-list" aria-label="Past journal entries"></div>
                 <div id="noEntriesMsg" class="empty-state">
@@ -485,6 +495,47 @@
               <div class="countdown-display" id="countdownDisplay" aria-live="polite">
                 <p>Set your exam date to see the countdown.</p>
               </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <i data-lucide="book-marked" aria-hidden="true"></i>
+                <h2>Syllabus Progress</h2>
+              </div>
+              <p class="card-desc">Track how much of each subject you've covered.</p>
+              <div id="syllabusProgress" class="syllabus-progress" aria-live="polite"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <i data-lucide="activity" aria-hidden="true"></i>
+                <h2>Pre-Exam Anxiety Check</h2>
+              </div>
+              <p class="card-desc">Rate how much each statement applies to you (1 = not at all, 5 = very much).</p>
+              <form id="anxiety-form" class="anxiety-form" novalidate>
+                <div class="form-group">
+                  <label for="anxiety-q1">I feel nervous when I think about my exam</label>
+                  <input type="range" id="anxiety-q1" min="1" max="5" value="3" aria-label="Anxiety question 1">
+                </div>
+                <div class="form-group">
+                  <label for="anxiety-q2">I have trouble sleeping because of exam worry</label>
+                  <input type="range" id="anxiety-q2" min="1" max="5" value="3" aria-label="Anxiety question 2">
+                </div>
+                <div class="form-group">
+                  <label for="anxiety-q3">I doubt my preparation even after studying</label>
+                  <input type="range" id="anxiety-q3" min="1" max="5" value="3" aria-label="Anxiety question 3">
+                </div>
+                <div class="form-group">
+                  <label for="anxiety-q4">I compare myself negatively to other students</label>
+                  <input type="range" id="anxiety-q4" min="1" max="5" value="3" aria-label="Anxiety question 4">
+                </div>
+                <div class="form-group">
+                  <label for="anxiety-q5">Physical symptoms (headache, stomach) appear when studying</label>
+                  <input type="range" id="anxiety-q5" min="1" max="5" value="3" aria-label="Anxiety question 5">
+                </div>
+                <button type="submit" class="btn-primary">Assess My Anxiety</button>
+              </form>
+              <div id="anxietyResult" class="anxiety-result" aria-live="polite" role="status"></div>
             </div>
 
             <div class="card">

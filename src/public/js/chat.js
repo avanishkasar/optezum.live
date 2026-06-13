@@ -18,9 +18,8 @@ let isSending = false;
  * @type {string[]}
  */
 const CRISIS_KEYWORDS = [
-  'suicide', 'kill myself', 'end my life', 'want to die', 'self-harm',
-  'self harm', 'cutting myself', 'no reason to live', 'better off dead',
-  'hurt myself', 'ending it all', 'not worth living',
+  'suicide', 'kill myself', 'end it all', "don't want to live",
+  'want to die', 'self-harm', 'hurt myself',
 ];
 
 /**
@@ -100,13 +99,20 @@ async function handleSend() {
 
     if (response.ok) {
       const data = await response.json();
-      const reply = data.reply || 'I\'m here for you. Could you tell me more about how you\'re feeling?';
-      renderMessage('assistant', reply);
-      conversationHistory.push({ role: 'assistant', content: reply });
 
-      // Server may also flag crisis
       if (data.crisis) {
+        const crisisText = [
+          data.message || 'Your safety matters. Please reach out for help now.',
+          ...(data.helplines || []).map((h) => `${h.name}: ${h.number}`),
+          data.disclaimer || '',
+        ].filter(Boolean).join('\n');
+        renderMessage('assistant', crisisText);
+        conversationHistory.push({ role: 'assistant', content: crisisText });
         showCrisisBanner();
+      } else {
+        const reply = data.reply || data.response || 'I\'m here for you. Could you tell me more about how you\'re feeling?';
+        renderMessage('assistant', reply);
+        conversationHistory.push({ role: 'assistant', content: reply });
       }
     } else {
       renderMessage('assistant', 'I\'m having trouble connecting right now. Please try again in a moment. Remember, you can always reach out to a helpline if you need immediate support.');
@@ -131,24 +137,23 @@ function renderMessage(role, content) {
   if (!container) return;
 
   const wrapper = document.createElement('div');
-  wrapper.className = `chat-bubble chat-${role}`;
+  wrapper.className = `chat-bubble ${role === 'user' ? 'user' : 'ai'}`;
   wrapper.setAttribute('aria-label', `${role === 'user' ? 'You' : 'Optezum'} said`);
 
-  const label = document.createElement('span');
-  label.className = 'chat-role-label';
-  label.textContent = role === 'user' ? 'You' : 'Optezum';
-  wrapper.appendChild(label);
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble-content';
 
   const body = document.createElement('p');
   body.className = 'chat-text';
   body.textContent = escapeHtml(content);
-  wrapper.appendChild(body);
+  bubble.appendChild(body);
 
   const time = document.createElement('span');
   time.className = 'chat-time';
   time.textContent = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-  wrapper.appendChild(time);
+  bubble.appendChild(time);
 
+  wrapper.appendChild(bubble);
   container.appendChild(wrapper);
   scrollToBottom();
 }
@@ -160,7 +165,7 @@ function renderMessage(role, content) {
 function showTypingIndicator() {
   const indicator = document.getElementById('typing-indicator');
   if (indicator) {
-    indicator.classList.add('visible');
+    indicator.style.display = 'flex';
     indicator.setAttribute('aria-hidden', 'false');
   }
 }
@@ -172,7 +177,7 @@ function showTypingIndicator() {
 function hideTypingIndicator() {
   const indicator = document.getElementById('typing-indicator');
   if (indicator) {
-    indicator.classList.remove('visible');
+    indicator.style.display = 'none';
     indicator.setAttribute('aria-hidden', 'true');
   }
 }
@@ -198,9 +203,9 @@ function checkCrisis(text) {
 function showCrisisBanner() {
   const banner = document.getElementById('crisis-banner');
   if (banner) {
-    banner.classList.add('visible');
+    banner.style.display = 'flex';
     banner.setAttribute('aria-hidden', 'false');
-    banner.focus();
+    banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 }
 

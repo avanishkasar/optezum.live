@@ -8,6 +8,9 @@
 /** @type {number|null} Currently selected mood value (1-5). */
 let selectedMood = null;
 
+/** @type {string} Current search filter for past entries. */
+let entrySearchQuery = '';
+
 /**
  * Initializes the journal module — sets up mood selectors, form listeners,
  * and renders any existing past entries.
@@ -16,6 +19,11 @@ let selectedMood = null;
 function initJournal() {
   setupMoodSelector();
   setupFormListener();
+  setupStressSlider();
+  setupCharCounter();
+  setupEntrySearch();
+  syncExamTypeFromSettings();
+  setupReflectionPrompt();
   renderPastEntries();
   setTodayDate();
 }
@@ -44,10 +52,10 @@ function setupMoodSelector() {
     btn.addEventListener('click', () => {
       buttons.forEach((b) => {
         b.classList.remove('active');
-        b.setAttribute('aria-selected', 'false');
+        b.setAttribute('aria-checked', 'false');
       });
       btn.classList.add('active');
-      btn.setAttribute('aria-selected', 'true');
+      btn.setAttribute('aria-checked', 'true');
       selectedMood = parseInt(btn.dataset.mood, 10);
     });
 
@@ -58,6 +66,95 @@ function setupMoodSelector() {
       }
     });
   });
+}
+
+/**
+ * Syncs the stress slider label with its current value.
+ * @returns {void}
+ */
+function setupStressSlider() {
+  const slider = document.getElementById('stress-level');
+  const label = document.getElementById('stressValue');
+  if (!slider || !label) return;
+
+  const update = () => {
+    label.textContent = slider.value;
+  };
+  slider.addEventListener('input', update);
+  update();
+}
+
+/**
+ * Updates the journal textarea character counter.
+ * @returns {void}
+ */
+function setupCharCounter() {
+  const textarea = document.getElementById('journal-text');
+  const counter = document.getElementById('charCount');
+  if (!textarea || !counter) return;
+
+  textarea.addEventListener('input', () => {
+    counter.textContent = String(textarea.value.length);
+  });
+}
+
+/**
+ * Post-study reflection prompts rotated on button click.
+ * @type {string[]}
+ */
+const REFLECTION_PROMPTS = [
+  'What topic did you study today, and how confident do you feel about it?',
+  'What was the hardest part of today\'s study session, and why?',
+  'Did anything distract you today? How can you reduce that tomorrow?',
+  'Name one thing you understood better today than yesterday.',
+  'How did your energy level change during study? What helped or hurt?',
+  'What would you tell a friend who had the same study day as you?',
+  'If you could redo one hour of today, what would you change?',
+];
+
+/**
+ * Sets up the reflection prompt button for post-study journaling.
+ * @returns {void}
+ */
+function setupReflectionPrompt() {
+  const btn = document.getElementById('reflection-prompt-btn');
+  const textarea = document.getElementById('journal-text');
+  if (!btn || !textarea) return;
+
+  btn.addEventListener('click', () => {
+    const prompt = REFLECTION_PROMPTS[Math.floor(Math.random() * REFLECTION_PROMPTS.length)];
+    textarea.value = prompt + (textarea.value ? `\n\n${textarea.value}` : '');
+    textarea.focus();
+    const counter = document.getElementById('charCount');
+    if (counter) counter.textContent = String(textarea.value.length);
+  });
+}
+
+/**
+ * Sets up search/filter for past journal entries.
+ * @returns {void}
+ */
+function setupEntrySearch() {
+  const searchInput = document.getElementById('entry-search');
+  if (!searchInput) return;
+
+  searchInput.addEventListener('input', () => {
+    entrySearchQuery = searchInput.value.trim().toLowerCase();
+    renderPastEntries();
+  });
+}
+
+/**
+ * Pre-selects exam type from saved settings.
+ * @returns {void}
+ */
+function syncExamTypeFromSettings() {
+  if (typeof getSettings !== 'function') return;
+  const settings = getSettings();
+  const examSelect = document.getElementById('exam-type');
+  if (examSelect && settings.examType) {
+    examSelect.value = settings.examType;
+  }
 }
 
 /**
@@ -88,24 +185,35 @@ async function handleJournalSubmit() {
   const errorSpan = document.getElementById('journal-error');
   const submitBtn = document.getElementById('journal-submit');
 
+  const journalText = sanitizeInput(journalTextarea.value);
+
   const data = {
+    entry: journalText,
+    journalText,
     mood: selectedMood,
+    stressLevel: parseInt(stressSlider.value, 10),
     stress: parseInt(stressSlider.value, 10),
     sleepHours: parseFloat(sleepInput.value) || 0,
     studyHours: parseFloat(studyInput.value) || 0,
     examType: examSelect.value,
-    journalText: sanitizeInput(journalTextarea.value),
   };
 
   const validation = validateJournalForm(data);
   if (!validation.valid) {
     if (errorSpan) {
-      errorSpan.textContent = validation.errors[0];
+      errorSpan.textContent = validation.errors[0].message;
     }
     return;
   }
 
   if (errorSpan) errorSpan.textContent = '';
+
+  // Persist exam type preference
+  if (typeof getSettings === 'function' && typeof saveSettings === 'function' && data.examType) {
+    const settings = getSettings();
+    settings.examType = data.examType;
+    saveSettings(settings);
+  }
 
   // Save to local storage
   const saved = saveEntry(data);
@@ -117,43 +225,122 @@ async function handleJournalSubmit() {
   // Update UI
   submitBtn.disabled = true;
   submitBtn.textContent = 'Analyzing...';
+  showAnalysisLoading(true);
 
   try {
     const response = await fetch('/api/analyze-journal', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        entry: data.entry,
+        mood: data.mood,
+        stressLevel: data.stressLevel,
+        sleepHours: data.sleepHours,
+        studyHours: data.studyHours,
+        examType: data.examType,
+      }),
     });
+
+    showAnalysisLoading(false);
 
     if (response.ok) {
       const analysis = await response.json();
-      renderAnalysis(analysis);
+      if (analysis.crisis) {
+        renderCrisisAnalysis(analysis);
+      } else {
+        renderAnalysis(analysis);
+      }
     } else {
       renderAnalysis({
-        summary: 'Entry saved! AI analysis is currently unavailable.',
-        suggestions: ['Take a short break', 'Practice deep breathing', 'Stay hydrated'],
-        moodTrend: 'stable',
+        emotionalState: 'Entry saved! AI analysis is currently unavailable.',
+        recommendations: ['Take a short break', 'Practice deep breathing', 'Stay hydrated'],
       });
     }
   } catch {
+    showAnalysisLoading(false);
     renderAnalysis({
-      summary: 'Entry saved locally. Connect to the internet for AI insights.',
-      suggestions: ['Review your past entries', 'Try a mindfulness exercise'],
-      moodTrend: 'unknown',
+      emotionalState: 'Entry saved locally. Connect to the internet for AI insights.',
+      recommendations: ['Review your past entries', 'Try a mindfulness exercise'],
     });
   }
 
   // Reset form
   submitBtn.disabled = false;
-  submitBtn.textContent = 'Save & Analyze';
+  submitBtn.textContent = 'Analyze with AI';
   journalTextarea.value = '';
+  const charCount = document.getElementById('charCount');
+  if (charCount) charCount.textContent = '0';
   selectedMood = null;
   document.querySelectorAll('.mood-btn').forEach((b) => {
     b.classList.remove('active');
-    b.setAttribute('aria-selected', 'false');
+    b.setAttribute('aria-checked', 'false');
   });
 
+  if (typeof updateStreak === 'function') updateStreak();
   renderPastEntries();
+}
+
+/**
+ * Shows or hides the analysis loading card.
+ * @param {boolean} loading - Whether loading state is active.
+ * @returns {void}
+ */
+function showAnalysisLoading(loading) {
+  const loadingCard = document.getElementById('analysisLoading');
+  const analysisCard = document.getElementById('analysisCard');
+  if (loadingCard) loadingCard.style.display = loading ? 'block' : 'none';
+  if (analysisCard && loading) analysisCard.style.display = 'none';
+}
+
+/**
+ * Renders crisis helpline information in the analysis area.
+ * @param {object} data - Crisis response from the API.
+ * @returns {void}
+ */
+function renderCrisisAnalysis(data) {
+  const analysisCard = document.getElementById('analysisCard');
+  const container = document.getElementById('analysis-results');
+  if (!container) return;
+
+  if (analysisCard) analysisCard.style.display = 'block';
+
+  while (container.firstChild) {
+    container.removeChild(container.firstChild);
+  }
+
+  const heading = document.createElement('h3');
+  heading.textContent = 'Your Safety Matters';
+  heading.className = 'analysis-heading crisis-heading';
+  container.appendChild(heading);
+
+  const msg = document.createElement('p');
+  msg.className = 'analysis-summary';
+  msg.textContent = data.message || 'Please reach out to a trained professional right now.';
+  container.appendChild(msg);
+
+  if (data.helplines && data.helplines.length > 0) {
+    const list = document.createElement('ul');
+    list.className = 'suggestions-list crisis-helplines';
+    data.helplines.forEach((line) => {
+      const li = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = `tel:${line.number.replace(/-/g, '')}`;
+      link.textContent = `${line.name}: ${line.number}`;
+      li.appendChild(link);
+      if (line.description) {
+        li.appendChild(document.createTextNode(` — ${line.description}`));
+      }
+      list.appendChild(li);
+    });
+    container.appendChild(list);
+  }
+
+  if (data.disclaimer) {
+    const disclaimer = document.createElement('p');
+    disclaimer.className = 'crisis-disclaimer';
+    disclaimer.textContent = data.disclaimer;
+    container.appendChild(disclaimer);
+  }
 }
 
 /**
@@ -166,51 +353,112 @@ async function handleJournalSubmit() {
  * @returns {void}
  */
 function renderAnalysis(data) {
+  const analysisCard = document.getElementById('analysisCard');
   const container = document.getElementById('analysis-results');
   if (!container) return;
 
-  // Clear previous analysis
+  if (analysisCard) analysisCard.style.display = 'block';
+
   while (container.firstChild) {
     container.removeChild(container.firstChild);
   }
 
-  container.classList.add('visible');
+  const summary = data.emotionalState || data.summary || data.stressAnalysis || 'Analysis complete.';
+  const suggestions = data.recommendations || data.coping_suggestions || data.suggestions || [];
+  const affirmation = data.positiveAffirmation || data.affirmation;
+  const wellnessScore = data.overallWellnessScore || data.mood_score;
 
-  // Summary
   const summaryHeading = document.createElement('h3');
   summaryHeading.textContent = 'AI Analysis';
   summaryHeading.className = 'analysis-heading';
   container.appendChild(summaryHeading);
 
   const summaryP = document.createElement('p');
-  summaryP.textContent = escapeHtml(data.summary || 'No summary available.');
+  summaryP.textContent = escapeHtml(summary);
   summaryP.className = 'analysis-summary';
   container.appendChild(summaryP);
 
-  // Mood trend badge
-  if (data.moodTrend && data.moodTrend !== 'unknown') {
-    const badge = document.createElement('span');
-    badge.className = `trend-badge trend-${data.moodTrend}`;
-    const trendLabels = { up: '↑ Improving', down: '↓ Declining', stable: '→ Stable' };
-    badge.textContent = trendLabels[data.moodTrend] || data.moodTrend;
-    container.appendChild(badge);
+  if (data.stressAnalysis) {
+    const stressP = document.createElement('p');
+    stressP.className = 'analysis-detail';
+    stressP.textContent = escapeHtml(data.stressAnalysis);
+    container.appendChild(stressP);
   }
 
-  // Suggestions
-  if (data.suggestions && data.suggestions.length > 0) {
+  if (data.sleepAssessment) {
+    const sleepP = document.createElement('p');
+    sleepP.className = 'analysis-detail';
+    sleepP.textContent = `Sleep: ${escapeHtml(data.sleepAssessment)}`;
+    container.appendChild(sleepP);
+  }
+
+  if (data.studyPatternInsight) {
+    const studyP = document.createElement('p');
+    studyP.className = 'analysis-detail';
+    studyP.textContent = `Study: ${escapeHtml(data.studyPatternInsight)}`;
+    container.appendChild(studyP);
+  }
+
+  if (wellnessScore !== undefined && wellnessScore !== null) {
+    const scoreBadge = document.createElement('span');
+    scoreBadge.className = 'trend-badge trend-stable';
+    scoreBadge.textContent = `Wellness Score: ${wellnessScore}/10`;
+    container.appendChild(scoreBadge);
+  }
+
+  if (data.emotional_patterns && data.emotional_patterns.length > 0) {
+    const patternsHeading = document.createElement('h4');
+    patternsHeading.textContent = 'Emotional Patterns';
+    patternsHeading.className = 'suggestions-heading';
+    container.appendChild(patternsHeading);
+
+    const patternsList = document.createElement('ul');
+    patternsList.className = 'suggestions-list';
+    data.emotional_patterns.forEach((p) => {
+      const li = document.createElement('li');
+      li.textContent = escapeHtml(p);
+      patternsList.appendChild(li);
+    });
+    container.appendChild(patternsList);
+  }
+
+  if (data.stress_triggers && data.stress_triggers.length > 0) {
+    const triggersHeading = document.createElement('h4');
+    triggersHeading.textContent = 'Stress Triggers';
+    triggersHeading.className = 'suggestions-heading';
+    container.appendChild(triggersHeading);
+
+    const triggersList = document.createElement('ul');
+    triggersList.className = 'suggestions-list';
+    data.stress_triggers.forEach((t) => {
+      const li = document.createElement('li');
+      li.textContent = escapeHtml(t);
+      triggersList.appendChild(li);
+    });
+    container.appendChild(triggersList);
+  }
+
+  if (suggestions.length > 0) {
     const sugHeading = document.createElement('h4');
-    sugHeading.textContent = 'Suggestions';
+    sugHeading.textContent = 'Coping Suggestions';
     sugHeading.className = 'suggestions-heading';
     container.appendChild(sugHeading);
 
     const list = document.createElement('ul');
     list.className = 'suggestions-list';
-    data.suggestions.forEach((s) => {
+    suggestions.forEach((s) => {
       const li = document.createElement('li');
       li.textContent = escapeHtml(s);
       list.appendChild(li);
     });
     container.appendChild(list);
+  }
+
+  if (affirmation) {
+    const affBlock = document.createElement('blockquote');
+    affBlock.className = 'analysis-affirmation';
+    affBlock.textContent = escapeHtml(affirmation);
+    container.appendChild(affBlock);
   }
 }
 
@@ -227,7 +475,12 @@ function renderPastEntries() {
     container.removeChild(container.firstChild);
   }
 
-  const entries = getEntries();
+  const entries = getEntries().filter((entry) => {
+    if (!entrySearchQuery) return true;
+    const text = (entry.journalText || entry.entry || '').toLowerCase();
+    const exam = (entry.examType || '').toLowerCase();
+    return text.includes(entrySearchQuery) || exam.includes(entrySearchQuery);
+  });
   if (entries.length === 0) {
     const emptyMsg = document.createElement('p');
     emptyMsg.className = 'empty-state';
@@ -263,13 +516,14 @@ function renderPastEntries() {
 
     const metaDiv = document.createElement('div');
     metaDiv.className = 'entry-meta';
-    metaDiv.textContent = `Stress: ${entry.stress}/10 · Sleep: ${entry.sleepHours}h · Study: ${entry.studyHours}h · ${entry.examType}`;
+    metaDiv.textContent = `Stress: ${entry.stress || entry.stressLevel}/10 · Sleep: ${entry.sleepHours}h · Study: ${entry.studyHours}h · ${entry.examType}`;
     card.appendChild(metaDiv);
 
+    const entryText = entry.journalText || entry.entry || '';
     const textP = document.createElement('p');
     textP.className = 'entry-text';
-    textP.textContent = escapeHtml(entry.journalText).slice(0, 200);
-    if (entry.journalText.length > 200) {
+    textP.textContent = escapeHtml(entryText).slice(0, 200);
+    if (entryText.length > 200) {
       const ellipsis = document.createTextNode('...');
       textP.appendChild(ellipsis);
     }

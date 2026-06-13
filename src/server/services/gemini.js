@@ -165,10 +165,15 @@ async function chatWithCompanion(message, history) {
   }
 
   const formattedHistory = Array.isArray(history)
-    ? history.map((h) => ({
-        role: h.role === 'user' ? 'user' : 'model',
-        parts: [{ text: typeof h.parts === 'string' ? h.parts : String(h.parts) }],
-      }))
+    ? history.map((h) => {
+        const text = typeof h.parts === 'string'
+          ? h.parts
+          : (h.content || (Array.isArray(h.parts) ? h.parts[0]?.text : '') || '');
+        return {
+          role: h.role === 'user' ? 'user' : 'model',
+          parts: [{ text: String(text) }],
+        };
+      })
     : [];
 
   const contents = [

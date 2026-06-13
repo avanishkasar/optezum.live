@@ -9,6 +9,8 @@
 /** @type {'7' | '30'} Current chart range selection. */
 let chartRange = '7';
 
+const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
 /**
  * Initializes the dashboard — renders all charts and stats,
  * and sets up the range toggle.
@@ -16,7 +18,9 @@ let chartRange = '7';
  */
 function initDashboard() {
   setupRangeToggle();
+  setupInsightsRefresh();
   refreshDashboard();
+  requestWeeklyInsights();
 }
 
 /**
@@ -32,6 +36,17 @@ function refreshDashboard() {
   renderStressHeatmap(entries);
   renderCorrelation(entries);
   renderStats(allEntries);
+}
+
+/**
+ * Sets up the refresh button for weekly AI insights.
+ * @returns {void}
+ */
+function setupInsightsRefresh() {
+  const btn = document.getElementById('btnRefreshInsights');
+  if (btn) {
+    btn.addEventListener('click', () => requestWeeklyInsights());
+  }
 }
 
 /**
@@ -98,12 +113,10 @@ function renderMoodChart(entries) {
   svg.setAttribute('aria-label', 'Mood trend line chart');
   svg.classList.add('mood-chart-svg');
 
-  // Title for accessibility
   const title = document.createElementNS(svgNS, 'title');
   title.textContent = `Mood trend over last ${chartRange} days`;
   svg.appendChild(title);
 
-  // Grid lines
   for (let i = 1; i <= 5; i++) {
     const y = height - padding - ((i - 1) / 4) * (height - 2 * padding);
     const line = document.createElementNS(svgNS, 'line');
@@ -115,7 +128,6 @@ function renderMoodChart(entries) {
     line.setAttribute('stroke-width', '1');
     svg.appendChild(line);
 
-    // Y-axis label
     const label = document.createElementNS(svgNS, 'text');
     label.setAttribute('x', padding - 8);
     label.setAttribute('y', y + 4);
@@ -126,14 +138,12 @@ function renderMoodChart(entries) {
     svg.appendChild(label);
   }
 
-  // Data points and path
   const points = sorted.map((entry, idx) => {
     const x = padding + (idx / (sorted.length - 1)) * (width - 2 * padding);
     const y = height - padding - ((entry.mood - 1) / 4) * (height - 2 * padding);
     return { x, y, entry };
   });
 
-  // Gradient fill under line
   const defs = document.createElementNS(svgNS, 'defs');
   const gradient = document.createElementNS(svgNS, 'linearGradient');
   gradient.setAttribute('id', 'mood-gradient');
@@ -154,7 +164,6 @@ function renderMoodChart(entries) {
   defs.appendChild(gradient);
   svg.appendChild(defs);
 
-  // Area fill
   const areaPath = document.createElementNS(svgNS, 'path');
   let areaD = `M ${points[0].x} ${points[0].y}`;
   points.slice(1).forEach((p) => { areaD += ` L ${p.x} ${p.y}`; });
@@ -163,7 +172,6 @@ function renderMoodChart(entries) {
   areaPath.setAttribute('fill', 'url(#mood-gradient)');
   svg.appendChild(areaPath);
 
-  // Line
   const linePath = document.createElementNS(svgNS, 'path');
   let lineD = `M ${points[0].x} ${points[0].y}`;
   points.slice(1).forEach((p) => { lineD += ` L ${p.x} ${p.y}`; });
@@ -175,7 +183,6 @@ function renderMoodChart(entries) {
   linePath.setAttribute('stroke-linejoin', 'round');
   svg.appendChild(linePath);
 
-  // Data dots
   points.forEach((p) => {
     const circle = document.createElementNS(svgNS, 'circle');
     circle.setAttribute('cx', p.x);
@@ -196,8 +203,16 @@ function renderMoodChart(entries) {
 }
 
 /**
- * Renders a stress heatmap as a CSS grid of colored cells.
- * Darker red = higher stress, calmer teal = lower stress.
+ * Converts JS day index (0=Sun) to Mon-first index (0=Mon).
+ * @param {number} day - getDay() value.
+ * @returns {number} Mon-first index.
+ */
+function toMondayFirstIndex(day) {
+  return day === 0 ? 6 : day - 1;
+}
+
+/**
+ * Renders a stress heatmap grouped by day of week.
  * @param {object[]} entries - Array of journal entries with stress and timestamp.
  * @returns {void}
  */
@@ -217,36 +232,56 @@ function renderStressHeatmap(entries) {
     return;
   }
 
-  const grid = document.createElement('div');
-  grid.className = 'heatmap-grid';
-  grid.setAttribute('role', 'img');
-  grid.setAttribute('aria-label', 'Stress level heatmap');
-
-  const sorted = [...entries].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-  sorted.forEach((entry) => {
-    const cell = document.createElement('div');
-    cell.className = 'heatmap-cell';
-
-    // Color interpolation: low stress = teal, high = red-orange
-    const ratio = (entry.stress - 1) / 9;
-    const r = Math.round(79 + ratio * (220 - 79));
-    const g = Math.round(209 + ratio * (50 - 209));
-    const b = Math.round(197 + ratio * (50 - 197));
-    cell.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-
-    cell.setAttribute('aria-label', `Stress ${entry.stress}/10 on ${new Date(entry.timestamp).toLocaleDateString()}`);
-    cell.setAttribute('title', `Stress: ${entry.stress}/10 — ${new Date(entry.timestamp).toLocaleDateString()}`);
-
-    grid.appendChild(cell);
+  const dayBuckets = Array.from({ length: 7 }, () => []);
+  entries.forEach((entry) => {
+    const stress = entry.stress ?? entry.stressLevel;
+    if (typeof stress !== 'number') return;
+    const dayIdx = toMondayFirstIndex(new Date(entry.timestamp).getDay());
+    dayBuckets[dayIdx].push(stress);
   });
 
-  container.appendChild(grid);
+  const wrapper = document.createElement('div');
+  wrapper.className = 'heatmap-week-grid';
+  wrapper.setAttribute('role', 'img');
+  wrapper.setAttribute('aria-label', 'Stress level heatmap by day of week');
+
+  DAY_LABELS.forEach((label, idx) => {
+    const col = document.createElement('div');
+    col.className = 'heatmap-day-col';
+
+    const dayLabel = document.createElement('span');
+    dayLabel.className = 'heatmap-day-label';
+    dayLabel.textContent = label;
+    col.appendChild(dayLabel);
+
+    const cell = document.createElement('div');
+    cell.className = 'heatmap-cell heatmap-cell-week';
+
+    const values = dayBuckets[idx];
+    if (values.length === 0) {
+      cell.style.backgroundColor = '#1a1a1a';
+      cell.setAttribute('aria-label', `${label}: no data`);
+      cell.setAttribute('title', `${label}: no entries`);
+    } else {
+      const avg = values.reduce((a, b) => a + b, 0) / values.length;
+      const ratio = (avg - 1) / 9;
+      const r = Math.round(79 + ratio * (220 - 79));
+      const g = Math.round(209 + ratio * (50 - 209));
+      const b = Math.round(197 + ratio * (50 - 197));
+      cell.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+      cell.setAttribute('aria-label', `${label}: average stress ${avg.toFixed(1)}/10`);
+      cell.setAttribute('title', `${label}: avg stress ${avg.toFixed(1)}/10 (${values.length} entries)`);
+    }
+
+    col.appendChild(cell);
+    wrapper.appendChild(col);
+  });
+
+  container.appendChild(wrapper);
 }
 
 /**
  * Renders a simple sleep vs mood correlation display.
- * Shows paired bars for each entry.
  * @param {object[]} entries - Array of journal entries with sleepHours and mood.
  * @returns {void}
  */
@@ -300,7 +335,6 @@ function renderCorrelation(entries) {
     wrapper.appendChild(pair);
   });
 
-  // Legend
   const legend = document.createElement('div');
   legend.className = 'corr-legend';
 
@@ -319,16 +353,17 @@ function renderCorrelation(entries) {
 }
 
 /**
- * Renders summary stat cards: average mood, journal streak, and total entries.
+ * Renders summary stat cards: average mood, journal streak, total entries, avg sleep.
  * @param {object[]} entries - All journal entries.
  * @returns {void}
  */
 function renderStats(entries) {
-  const avgMoodEl = document.getElementById('stat-avg-mood');
-  const streakEl = document.getElementById('stat-streak');
-  const totalEl = document.getElementById('stat-total');
+  const avgMoodEl = document.getElementById('avgMood');
+  const streakEl = document.getElementById('streakStat');
+  const totalEl = document.getElementById('totalEntries');
+  const avgSleepEl = document.getElementById('avgSleep');
 
-  if (totalEl) totalEl.textContent = entries.length;
+  if (totalEl) totalEl.textContent = String(entries.length);
 
   if (avgMoodEl) {
     if (entries.length === 0) {
@@ -339,8 +374,17 @@ function renderStats(entries) {
     }
   }
 
+  if (avgSleepEl) {
+    if (entries.length === 0) {
+      avgSleepEl.textContent = '—';
+    } else {
+      const avg = entries.reduce((sum, e) => sum + (e.sleepHours || 0), 0) / entries.length;
+      avgSleepEl.textContent = `${avg.toFixed(1)}h`;
+    }
+  }
+
   if (streakEl) {
-    streakEl.textContent = calculateStreak(entries);
+    streakEl.textContent = String(calculateStreak(entries));
   }
 }
 
@@ -366,7 +410,6 @@ function calculateStreak(entries) {
   );
 
   const checkDate = new Date(today);
-  // Allow today or yesterday as the start of the streak
   if (!datesSet.has(checkDate.getTime())) {
     checkDate.setDate(checkDate.getDate() - 1);
   }
@@ -380,12 +423,34 @@ function calculateStreak(entries) {
 }
 
 /**
+ * Normalizes journal entries for API consumption.
+ * @param {object[]} entries - Raw stored entries.
+ * @returns {object[]} Entries with entry text field populated.
+ */
+function normalizeEntriesForApi(entries) {
+  return entries.map((e) => ({
+    ...e,
+    entry: e.entry || e.journalText || '',
+    stressLevel: e.stressLevel ?? e.stress,
+  }));
+}
+
+/**
  * Requests weekly AI insights from the backend and renders them.
  * @returns {Promise<void>}
  */
-export async function requestWeeklyInsights() {
-  const container = document.getElementById('weekly-insights');
+async function requestWeeklyInsights() {
+  const container = document.getElementById('weeklyInsightsContent');
   if (!container) return;
+
+  const recent = getRecentEntries(7);
+  if (recent.length < 3) {
+    while (container.firstChild) container.removeChild(container.firstChild);
+    const msg = document.createElement('p');
+    msg.textContent = 'Log at least 3 entries this week to unlock AI-powered pattern insights.';
+    container.appendChild(msg);
+    return;
+  }
 
   while (container.firstChild) {
     container.removeChild(container.firstChild);
@@ -397,7 +462,7 @@ export async function requestWeeklyInsights() {
   container.appendChild(loadingP);
 
   try {
-    const entries = getRecentEntries(7);
+    const entries = normalizeEntriesForApi(recent);
     const response = await fetch('/api/weekly-insights', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -411,20 +476,31 @@ export async function requestWeeklyInsights() {
     if (response.ok) {
       const data = await response.json();
 
+      if (data.crisis) {
+        const crisisP = document.createElement('p');
+        crisisP.textContent = data.message || 'Please reach out to a helpline if you need support.';
+        container.appendChild(crisisP);
+        return;
+      }
+
       const heading = document.createElement('h3');
-      heading.textContent = '📊 Weekly Insights';
+      heading.textContent = 'Weekly Pattern Insights';
       container.appendChild(heading);
 
-      const insightP = document.createElement('p');
-      insightP.textContent = escapeHtml(data.insight || 'Keep journaling for personalized insights!');
-      container.appendChild(insightP);
+      const insightText = data.insight || data.overallProgress || data.overall_trend || data.moodTrend;
+      if (insightText) {
+        const insightP = document.createElement('p');
+        insightP.textContent = escapeHtml(insightText);
+        container.appendChild(insightP);
+      }
 
-      if (data.tips && data.tips.length > 0) {
+      const tips = data.tips || data.recommendations || data.weeklyRecommendations || data.key_patterns || [];
+      if (tips.length > 0) {
         const tipsList = document.createElement('ul');
         tipsList.className = 'insights-tips';
-        data.tips.forEach((tip) => {
+        tips.forEach((tip) => {
           const li = document.createElement('li');
-          li.textContent = escapeHtml(tip);
+          li.textContent = escapeHtml(typeof tip === 'string' ? tip : JSON.stringify(tip));
           tipsList.appendChild(li);
         });
         container.appendChild(tipsList);
