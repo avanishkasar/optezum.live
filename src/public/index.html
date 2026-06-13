@@ -162,7 +162,7 @@
                       <span>Reflection Prompt</span>
                     </button>
                   </div>
-                  <textarea id="journal-text" rows="5" placeholder="Write freely about your day, feelings, study progress, worries, or anything on your mind..." aria-label="Journal entry text" maxlength="5000"></textarea>
+                  <textarea id="journal-text" rows="5" placeholder="Write freely about your day, feelings, study progress, worries, or anything on your mind..." aria-label="Journal entry text" aria-describedby="charCount journal-error" maxlength="5000"></textarea>
                   <div class="char-count"><span id="charCount">0</span>/5000</div>
                   <span class="error-msg" id="journal-error" role="alert" aria-live="assertive"></span>
                 </div>
@@ -178,7 +178,7 @@
             <!-- AI Analysis Results -->
             <div class="journal-results">
               <!-- Analysis Card -->
-              <div class="card analysis-card" id="analysisCard" aria-live="polite" style="display:none;">
+              <div class="card analysis-card is-hidden" id="analysisCard" aria-live="polite">
                 <div class="card-header">
                   <i data-lucide="brain" aria-hidden="true"></i>
                   <h2>AI Wellness Insights</h2>
@@ -187,7 +187,7 @@
               </div>
 
               <!-- Loading State -->
-              <div class="card analysis-loading" id="analysisLoading" style="display:none;" role="status" aria-label="Analyzing your entry">
+              <div class="card analysis-loading is-hidden" id="analysisLoading" role="status" aria-label="Analyzing your entry">
                 <div class="loader-ring"></div>
                 <p>Analyzing your entry...</p>
               </div>
@@ -223,7 +223,7 @@
               </div>
 
               <!-- Crisis Banner (hidden by default) -->
-              <div class="crisis-banner" id="crisis-banner" role="alert" aria-live="assertive" style="display:none;">
+              <div class="crisis-banner is-hidden" id="crisis-banner" role="alert" aria-live="assertive">
                 <i data-lucide="alert-triangle" aria-hidden="true"></i>
                 <div class="crisis-content">
                   <strong>You are not alone. Please reach out for help:</strong>
@@ -239,7 +239,7 @@
               <div class="chat-messages" id="chat-messages" role="log" aria-live="polite" aria-label="Conversation messages"></div>
 
               <!-- Typing Indicator -->
-              <div class="typing-indicator" id="typing-indicator" style="display:none;" aria-label="AI is typing" role="status">
+              <div class="typing-indicator is-hidden" id="typing-indicator" aria-label="AI is typing" role="status">
                 <span></span><span></span><span></span>
               </div>
 
@@ -575,8 +575,10 @@
   </div>
 
   <!-- Scripts -->
+  <script src="/shared/constants.js"></script>
+  <script src="js/utils/validation-core.js"></script>
   <script src="js/utils/sanitizer.js"></script>
-  <script src="js/utils/validators.js"></script>
+  <script src="js/utils/validators-browser.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/journal.js"></script>
   <script src="js/chat.js"></script>

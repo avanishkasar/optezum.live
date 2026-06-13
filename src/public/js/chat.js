@@ -35,6 +35,14 @@ function initChat() {
     sendBtn.addEventListener('click', () => handleSend());
   }
 
+  document.querySelectorAll('.quick-action-pill[data-prompt]').forEach((pill) => {
+    pill.addEventListener('click', () => {
+      if (!chatInput) return;
+      chatInput.value = pill.getAttribute('data-prompt') || '';
+      chatInput.focus();
+    });
+  });
+
   if (chatInput) {
     chatInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -177,7 +185,7 @@ function renderMessage(role, content) {
 function showTypingIndicator() {
   const indicator = document.getElementById('typing-indicator');
   if (indicator) {
-    indicator.style.display = 'flex';
+    indicator.classList.remove('is-hidden');
     indicator.setAttribute('aria-hidden', 'false');
   }
 }
@@ -189,7 +197,7 @@ function showTypingIndicator() {
 function hideTypingIndicator() {
   const indicator = document.getElementById('typing-indicator');
   if (indicator) {
-    indicator.style.display = 'none';
+    indicator.classList.add('is-hidden');
     indicator.setAttribute('aria-hidden', 'true');
   }
 }
@@ -215,7 +223,7 @@ function checkCrisis(text) {
 function showCrisisBanner() {
   const banner = document.getElementById('crisis-banner');
   if (banner) {
-    banner.style.display = 'flex';
+    banner.classList.remove('is-hidden');
     banner.setAttribute('aria-hidden', 'false');
     banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }

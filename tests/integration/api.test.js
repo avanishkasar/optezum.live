@@ -40,6 +40,16 @@ describe('API Endpoints', () => {
       const res = await request(app).get('/api/health');
       expect(res.statusCode).toBe(200);
       expect(res.body.status).toBe('ok');
+      expect(res.body.timestamp).toBeDefined();
+    });
+  });
+
+  describe('GET /health', () => {
+    test('should return 200 with status ok at root health endpoint', async () => {
+      const res = await request(app).get('/health');
+      expect(res.statusCode).toBe(200);
+      expect(res.body.status).toBe('ok');
+      expect(res.body.timestamp).toBeDefined();
     });
   });
 
@@ -60,6 +70,20 @@ describe('API Endpoints', () => {
       expect(res.statusCode).toBe(200);
       expect(res.body.mood_score).toBeDefined();
       expect(res.body.coping_suggestions).toBeDefined();
+    });
+
+    test('should return crisis payload when analysis detects crisis', async () => {
+      const gemini = require('../../src/server/services/gemini');
+      gemini.analyzeJournalEntry.mockResolvedValueOnce({
+        crisis: true,
+        message: 'Please seek help',
+        helplines: [{ name: 'AASRA', number: '9820466626' }],
+      });
+      const res = await request(app)
+        .post('/api/analyze-journal')
+        .send(validBody);
+      expect(res.statusCode).toBe(200);
+      expect(res.body.crisis).toBe(true);
     });
 
     test('should return 400 when entry is missing', async () => {
@@ -85,6 +109,20 @@ describe('API Endpoints', () => {
       expect(res.statusCode).toBe(200);
       expect(res.body.response).toBeDefined();
       expect(typeof res.body.response).toBe('string');
+    });
+
+    test('should return normalized object when companion returns crisis payload', async () => {
+      const gemini = require('../../src/server/services/gemini');
+      gemini.chatWithCompanion.mockResolvedValueOnce({
+        crisis: true,
+        message: 'Please reach out',
+        helplines: [{ name: 'AASRA', number: '9820466626' }],
+      });
+      const res = await request(app)
+        .post('/api/chat')
+        .send({ message: 'I feel overwhelmed', history: [] });
+      expect(res.statusCode).toBe(200);
+      expect(res.body.crisis).toBe(true);
     });
 
     test('should return 400 when message is empty', async () => {
@@ -154,6 +192,7 @@ describe('API Endpoints', () => {
         (res.headers['content-security-policy'] &&
           res.headers['content-security-policy'].includes('frame-ancestors'));
       expect(hasFrameProtection).toBeTruthy();
+      expect(res.headers['strict-transport-security']).toMatch(/max-age=31536000/);
     });
   });
 });

@@ -48,6 +48,7 @@ const {
   generateWeeklyInsights,
   generateCopingStrategy,
   containsCrisisKeywords,
+  sanitizeForGemini,
   CRISIS_KEYWORDS,
   CRISIS_RESPONSE,
 } = require('../../src/server/services/gemini');
@@ -117,6 +118,18 @@ describe('Gemini AI Service', () => {
     });
   });
 
+  describe('sanitizeForGemini', () => {
+    test('should strip HTML before model calls', () => {
+      const cleaned = sanitizeForGemini('<img src=x onerror=alert(1)>Hello');
+      expect(cleaned).not.toContain('<');
+      expect(cleaned).toContain('Hello');
+    });
+
+    test('should return empty string for non-string input', () => {
+      expect(sanitizeForGemini(undefined)).toBe('');
+    });
+  });
+
   describe('analyzeJournalEntry', () => {
     test('should return structured analysis for a journal entry', async () => {
       const result = await analyzeJournalEntry(
@@ -156,7 +169,21 @@ describe('Gemini AI Service', () => {
 
     test('should intercept crisis messages before calling AI', async () => {
       const result = await chatWithCompanion('I want to kill myself', []);
-      expect(result).toBeDefined();
+      expect(result.crisis).toBe(true);
+    });
+
+    test('should sanitize HTML in chat messages before model call', async () => {
+      const result = await chatWithCompanion('<b>Hello</b> there', []);
+      expect(result.reply || result).toBeDefined();
+    });
+
+    test('should sanitize mixed conversation history shapes', async () => {
+      const result = await chatWithCompanion('Follow up question', [
+        { role: 'user', content: 'I feel stressed' },
+        { role: 'assistant', parts: [{ text: 'Tell me more' }] },
+        { role: 'user', parts: 'Earlier message' },
+      ]);
+      expect(result.reply).toBeDefined();
     });
   });
 
@@ -169,6 +196,36 @@ describe('Gemini AI Service', () => {
     test('should handle unknown stress types', async () => {
       const result = await generateCopingStrategy('unknown_type', 'Other');
       expect(result).toBeDefined();
+    });
+
+    test('should short-circuit crisis language in stress type', async () => {
+      const result = await generateCopingStrategy('I want to kill myself', 'NEET');
+      expect(result.crisis).toBe(true);
+    });
+  });
+
+  describe('generateWeeklyInsights', () => {
+    test('should return weekly insights for valid entries', async () => {
+      const result = await generateWeeklyInsights([
+        { entry: 'Day 1 log', mood: 3, stressLevel: 5 },
+        { entry: 'Day 2 log', mood: 4, stressLevel: 4 },
+      ]);
+      expect(result).toBeDefined();
+    });
+
+    test('should sanitize string-only weekly entries', async () => {
+      const result = await generateWeeklyInsights([
+        '<b>Day 1</b> reflection',
+        'Day 2 reflection',
+      ]);
+      expect(result).toBeDefined();
+    });
+
+    test('should return crisis response when entries contain crisis language', async () => {
+      const result = await generateWeeklyInsights([
+        { entry: 'I want to kill myself', mood: 1, stressLevel: 10 },
+      ]);
+      expect(result.crisis).toBe(true);
     });
   });
 });

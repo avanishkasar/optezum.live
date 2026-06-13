@@ -2,53 +2,47 @@
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
-
-/**
- * Crisis keywords that trigger an immediate safe response
- * instead of forwarding the message to Gemini.
- * @type {string[]}
- */
-const CRISIS_KEYWORDS = [
-  'suicide',
-  'kill myself',
-  'end it all',
-  'self-harm',
-  "don't want to live",
-  'want to die',
-  'hurt myself',
-];
+const { cleanInput, sanitizeString } = require('../../public/js/utils/validation-core');
+const {
+  GEMINI,
+  CRISIS_HELPLINES,
+  CRISIS_KEYWORDS,
+} = require('../../shared/constants');
 
 /**
  * Hardcoded crisis response with Indian mental-health helplines.
- * Returned immediately when crisis keywords are detected.
  * @type {object}
  */
 const CRISIS_RESPONSE = {
   crisis: true,
   message:
     'I care about you and your safety. What you are feeling is serious, and you deserve support from a trained professional right now. Please reach out to one of these helplines immediately:',
-  helplines: [
-    { name: 'iCall', number: '9152987821', description: 'Psychosocial helpline by TISS' },
-    { name: 'Vandrevala Foundation', number: '1860-2662-345', description: '24/7 mental health support' },
-    { name: 'AASRA', number: '9820466626', description: '24/7 crisis intervention' },
-  ],
+  helplines: CRISIS_HELPLINES,
   disclaimer:
     'You are not alone. A trained counselor can help you through this. Please call one of the numbers above right now.',
 };
 
 /**
+ * Sanitizes user-provided text before any Gemini API call.
+ * Strips HTML/script tags and enforces length limits.
+ * @param {unknown} value - Raw user input.
+ * @returns {string} Sanitized plain text safe for model prompts.
+ */
+function sanitizeForGemini(value) {
+  if (typeof value !== 'string') return '';
+  return cleanInput(sanitizeString(value));
+}
+
+/**
  * Checks whether the given text contains any crisis keywords.
- * Comparison is case-insensitive.
- * @param {string} text - The text to scan for crisis keywords.
- * @returns {boolean} True if a crisis keyword is found.
+ * @param {string} text - Text to scan.
+ * @returns {boolean} True when a crisis keyword is detected.
  */
 function containsCrisisKeywords(text) {
   if (typeof text !== 'string') return false;
   const lower = text.toLowerCase();
   return CRISIS_KEYWORDS.some((keyword) => lower.includes(keyword));
 }
-
-/* ---------- Gemini client initialization ---------- */
 
 const apiKey = process.env.GEMINI_API_KEY;
 
@@ -58,12 +52,10 @@ let genAI = null;
 /** @type {import('@google/generative-ai').GenerativeModel | null} */
 let model = null;
 
-if (apiKey && apiKey !== 'your_gemini_api_key_here') {
+if (apiKey && apiKey !== GEMINI.API_KEY_PLACEHOLDER) {
   genAI = new GoogleGenerativeAI(apiKey);
-  model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  model = genAI.getGenerativeModel({ model: GEMINI.MODEL });
 }
-
-/* ---------- System prompts ---------- */
 
 const JOURNAL_SYSTEM_PROMPT = `You are a compassionate mental wellness AI for students preparing for competitive exams in India (NEET, JEE, CUET, CAT, GATE, UPSC). Analyze this journal entry and return ONLY valid JSON with the following structure:
 {
@@ -104,35 +96,31 @@ const COPING_SYSTEM_PROMPT = `You are a mental wellness expert specializing in h
 }
 Do NOT include any markdown formatting, code fences, or extra text outside the JSON.`;
 
-/* ---------- Service functions ---------- */
-
 /**
- * Analyzes a student journal entry using Gemini and returns structured wellness insights.
- * If crisis keywords are detected the function short-circuits with helpline information.
- *
- * @param {string} entry - The journal text written by the student.
- * @param {string} mood - The self-reported mood (e.g. "anxious", "happy").
- * @param {number} stressLevel - Self-reported stress level (1-10).
- * @param {number} [sleepHours] - Hours of sleep the student got.
- * @param {number} [studyHours] - Hours spent studying.
- * @param {string} [examType] - The exam the student is preparing for.
+ * Analyzes a student journal entry using Gemini.
+ * @param {string} entry - Journal text.
+ * @param {string|number} mood - Self-reported mood.
+ * @param {number} stressLevel - Stress level (1-10).
+ * @param {number} [sleepHours] - Hours of sleep.
+ * @param {number} [studyHours] - Hours studied.
+ * @param {string} [examType] - Target exam.
  * @returns {Promise<object>} Structured analysis or crisis response.
  */
 async function analyzeJournalEntry(entry, mood, stressLevel, sleepHours, studyHours, examType) {
-  if (containsCrisisKeywords(entry)) {
-    return CRISIS_RESPONSE;
-  }
+  const safeEntry = sanitizeForGemini(entry);
+  if (containsCrisisKeywords(safeEntry)) return CRISIS_RESPONSE;
 
   if (!model) {
-    throw new Error('Gemini API key is not configured. Set GEMINI_API_KEY in your .env file.');
+    throw new Error(`${GEMINI.API_KEY_ERROR_FRAGMENT} is not configured. Set GEMINI_API_KEY in your .env file.`);
   }
 
-  const userPrompt = `Journal Entry: "${entry}"
+  const safeExamType = sanitizeForGemini(examType || 'Not specified');
+  const userPrompt = `Journal Entry: "${safeEntry}"
 Mood: ${mood}
 Stress Level: ${stressLevel}/10
 Sleep Hours: ${sleepHours ?? 'Not provided'}
 Study Hours: ${studyHours ?? 'Not provided'}
-Exam: ${examType ?? 'Not specified'}`;
+Exam: ${safeExamType}`;
 
   const result = await model.generateContent({
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
@@ -149,36 +137,33 @@ Exam: ${examType ?? 'Not specified'}`;
 
 /**
  * Conducts a conversation with the empathetic AI companion.
- * Crisis keywords in the message trigger an immediate safe response.
- *
- * @param {string} message - The latest user message.
- * @param {Array<{role: string, parts: string}>} history - Previous conversation turns.
- * @returns {Promise<object>} Object containing the AI's reply text.
+ * @param {string} message - Latest user message.
+ * @param {Array<object>} history - Previous conversation turns.
+ * @returns {Promise<object>} AI reply object or crisis response.
  */
 async function chatWithCompanion(message, history) {
-  if (containsCrisisKeywords(message)) {
-    return CRISIS_RESPONSE;
-  }
+  const safeMessage = sanitizeForGemini(message);
+  if (containsCrisisKeywords(safeMessage)) return CRISIS_RESPONSE;
 
   if (!model) {
-    throw new Error('Gemini API key is not configured. Set GEMINI_API_KEY in your .env file.');
+    throw new Error(`${GEMINI.API_KEY_ERROR_FRAGMENT} is not configured. Set GEMINI_API_KEY in your .env file.`);
   }
 
   const formattedHistory = Array.isArray(history)
     ? history.map((h) => {
-        const text = typeof h.parts === 'string'
+        const raw = typeof h.parts === 'string'
           ? h.parts
           : (h.content || (Array.isArray(h.parts) ? h.parts[0]?.text : '') || '');
         return {
           role: h.role === 'user' ? 'user' : 'model',
-          parts: [{ text: String(text) }],
+          parts: [{ text: sanitizeForGemini(String(raw)) }],
         };
       })
     : [];
 
   const contents = [
     ...formattedHistory,
-    { role: 'user', parts: [{ text: message }] },
+    { role: 'user', parts: [{ text: safeMessage }] },
   ];
 
   const result = await model.generateContent({
@@ -190,23 +175,32 @@ async function chatWithCompanion(message, history) {
 }
 
 /**
- * Generates weekly insights by analyzing an array of journal entries.
- *
- * @param {Array<object>} entries - Array of journal entry objects from the past week.
- * @returns {Promise<object>} Structured weekly insights or crisis response.
+ * Generates weekly insights from journal entries.
+ * @param {Array<object>} entries - Weekly journal entries.
+ * @returns {Promise<object>} Weekly insight object or crisis response.
  */
 async function generateWeeklyInsights(entries) {
-  const combinedText = entries.map((e) => e.entry || e.text || JSON.stringify(e)).join('\n');
-  if (containsCrisisKeywords(combinedText)) {
-    return CRISIS_RESPONSE;
-  }
+  const sanitizedEntries = entries.map((entry) => {
+    if (typeof entry === 'string') return sanitizeForGemini(entry);
+    return {
+      ...entry,
+      entry: sanitizeForGemini(entry.entry || entry.journalText || entry.text || ''),
+      journalText: sanitizeForGemini(entry.journalText || entry.entry || ''),
+      text: sanitizeForGemini(entry.text || ''),
+    };
+  });
+
+  const combinedText = sanitizedEntries.map((e) => (
+    typeof e === 'string' ? e : (e.entry || e.text || '')
+  )).join('\n');
+
+  if (containsCrisisKeywords(combinedText)) return CRISIS_RESPONSE;
 
   if (!model) {
-    throw new Error('Gemini API key is not configured. Set GEMINI_API_KEY in your .env file.');
+    throw new Error(`${GEMINI.API_KEY_ERROR_FRAGMENT} is not configured. Set GEMINI_API_KEY in your .env file.`);
   }
 
-  const userPrompt = `Here are the journal entries from this week:\n${JSON.stringify(entries, null, 2)}`;
-
+  const userPrompt = `Here are the journal entries from this week:\n${JSON.stringify(sanitizedEntries, null, 2)}`;
   const result = await model.generateContent({
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
     systemInstruction: { parts: [{ text: WEEKLY_SYSTEM_PROMPT }] },
@@ -221,22 +215,21 @@ async function generateWeeklyInsights(entries) {
 }
 
 /**
- * Generates a personalized coping strategy based on the student's stress type and exam.
- *
- * @param {string} stressType - The kind of stress (e.g. "pre-exam anxiety", "burnout").
- * @param {string} [examType] - The exam the student is preparing for.
- * @returns {Promise<object>} Structured coping plan.
+ * Generates a personalized coping strategy.
+ * @param {string} stressType - Stress category.
+ * @param {string} [examType] - Target exam.
+ * @returns {Promise<object>} Coping strategy object or crisis response.
  */
 async function generateCopingStrategy(stressType, examType) {
-  if (containsCrisisKeywords(stressType)) {
-    return CRISIS_RESPONSE;
-  }
+  const safeStressType = sanitizeForGemini(stressType);
+  if (containsCrisisKeywords(safeStressType)) return CRISIS_RESPONSE;
 
   if (!model) {
-    throw new Error('Gemini API key is not configured. Set GEMINI_API_KEY in your .env file.');
+    throw new Error(`${GEMINI.API_KEY_ERROR_FRAGMENT} is not configured. Set GEMINI_API_KEY in your .env file.`);
   }
 
-  const userPrompt = `Stress Type: ${stressType}\nExam: ${examType ?? 'General competitive exam'}`;
+  const safeExamType = sanitizeForGemini(examType || 'General competitive exam');
+  const userPrompt = `Stress Type: ${safeStressType}\nExam: ${safeExamType}`;
 
   const result = await model.generateContent({
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
@@ -257,6 +250,7 @@ module.exports = {
   generateWeeklyInsights,
   generateCopingStrategy,
   containsCrisisKeywords,
+  sanitizeForGemini,
   CRISIS_KEYWORDS,
   CRISIS_RESPONSE,
 };

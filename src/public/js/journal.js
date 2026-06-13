@@ -288,8 +288,8 @@ async function handleJournalSubmit() {
 function showAnalysisLoading(loading) {
   const loadingCard = document.getElementById('analysisLoading');
   const analysisCard = document.getElementById('analysisCard');
-  if (loadingCard) loadingCard.style.display = loading ? 'block' : 'none';
-  if (analysisCard && loading) analysisCard.style.display = 'none';
+  if (loadingCard) loadingCard.classList.toggle('is-hidden', !loading);
+  if (analysisCard && loading) analysisCard.classList.add('is-hidden');
 }
 
 /**
@@ -302,7 +302,7 @@ function renderCrisisAnalysis(data) {
   const container = document.getElementById('analysis-results');
   if (!container) return;
 
-  if (analysisCard) analysisCard.style.display = 'block';
+  if (analysisCard) analysisCard.classList.remove('is-hidden');
 
   while (container.firstChild) {
     container.removeChild(container.firstChild);
@@ -357,7 +357,7 @@ function renderAnalysis(data) {
   const container = document.getElementById('analysis-results');
   if (!container) return;
 
-  if (analysisCard) analysisCard.style.display = 'block';
+  if (analysisCard) analysisCard.classList.remove('is-hidden');
 
   while (container.firstChild) {
     container.removeChild(container.firstChild);

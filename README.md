@@ -76,11 +76,28 @@ Optezum acts as an **empathetic digital companion** throughout a student's acade
 - Pomodoro study timer with wellness breaks
 - Exam-specific motivational quotes
 
-### 👤 Student Profile
+### 👤 Student Profile & Exam Support
 - Exam countdown timer
+- Syllabus progress tracker by subject
+- Pre-exam anxiety self-assessment with AI coping tips
+- Post-study reflection prompts in the journal
 - Data export (JSON)
 - Privacy-first local storage
 - Customizable settings
+
+### 🎯 Problem Statement Alignment
+
+Optezum directly addresses every core requirement:
+
+| Requirement | How Optezum Delivers |
+|---|---|
+| **Daily journaling & mood logs** | Smart journal with 5-point mood scale, stress, sleep, and study tracking |
+| **Stress triggers & emotional patterns** | Gemini AI analysis surfaces hidden triggers, cognitive distortions, and weekly patterns |
+| **Coping strategies** | Personalized recommendations after every journal entry and via the AI companion |
+| **Adaptive mindfulness** | Guided breathing (4-7-8, Box, Deep Calm), grounding, and Pomodoro wellness breaks |
+| **Motivational encouragement** | Exam-specific quotes, affirmations, and empathetic companion chat |
+| **Empathetic digital companion** | Context-aware Gemini chat with crisis-safe helpline routing |
+| **Academic journey support** | Exam tags (NEET/JEE/CUET/CAT/GATE/UPSC), countdown, syllabus tracker, anxiety check |
 
 ---
 

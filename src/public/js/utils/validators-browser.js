@@ -1,13 +1,8 @@
 /**
- * @module validators
- * @description Client and test facade over shared validation-core rules.
+ * @file Browser validation facade (loaded after validation-core.js).
+ * @description Exposes client-default wrappers without shadowing core implementations.
  */
 'use strict';
-
-const {
-  validateJournalForm: validateJournalCore,
-  validateChatMessage: validateChatCore,
-} = require('./validation-core');
 
 /**
  * Validates journal form data before client submission.
@@ -15,7 +10,10 @@ const {
  * @returns {{ valid: boolean, errors: Array<{field: string, message: string}> }}
  */
 function validateJournalForm(data) {
-  return validateJournalCore(data, { minEntryLength: 3, requireStressLevel: true });
+  const minLength = window.APP_CONSTANTS
+    ? window.APP_CONSTANTS.VALIDATION.MIN_CLIENT_ENTRY_LENGTH
+    : 3;
+  return ValidationCore.validateJournalForm(data, { minEntryLength: minLength, requireStressLevel: true });
 }
 
 /**
@@ -24,9 +22,5 @@ function validateJournalForm(data) {
  * @returns {{ valid: boolean, errors: Array<{field: string, message: string}> }}
  */
 function validateChatMessage(msg) {
-  return validateChatCore(msg);
-}
-
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { validateJournalForm, validateChatMessage };
+  return ValidationCore.validateChatMessage(msg);
 }
