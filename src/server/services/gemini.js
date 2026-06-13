@@ -60,7 +60,7 @@ let model = null;
 
 if (apiKey && apiKey !== 'your_gemini_api_key_here') {
   genAI = new GoogleGenerativeAI(apiKey);
-  model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 }
 
 /* ---------- System prompts ---------- */

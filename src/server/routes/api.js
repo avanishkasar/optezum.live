@@ -36,6 +36,9 @@ router.post('/analyze-journal', validateJournalInput, async (req, res) => {
     return res.status(200).json(analysis);
   } catch (err) {
     console.error('[API] analyze-journal error:', err.message);
+    if (err.message && err.message.includes('Gemini API key')) {
+      return res.status(503).json({ success: false, error: 'Gemini API not configured. Set GEMINI_API_KEY in .env.' });
+    }
     return res.status(500).json({ success: false, error: 'Failed to analyze journal entry. Please try again.' });
   }
 });
@@ -69,6 +72,9 @@ router.post('/chat', validateChatInput, async (req, res) => {
     return res.status(200).json(normalized);
   } catch (err) {
     console.error('[API] chat error:', err.message);
+    if (err.message && err.message.includes('Gemini API key')) {
+      return res.status(503).json({ success: false, error: 'Gemini API not configured. Set GEMINI_API_KEY in .env.' });
+    }
     return res.status(500).json({ success: false, error: 'Failed to get a response. Please try again.' });
   }
 });
@@ -99,6 +105,9 @@ router.post('/weekly-insights', validateWeeklyInput, async (req, res) => {
     return res.status(200).json(normalized);
   } catch (err) {
     console.error('[API] weekly-insights error:', err.message);
+    if (err.message && err.message.includes('Gemini API key')) {
+      return res.status(503).json({ success: false, error: 'Gemini API not configured. Set GEMINI_API_KEY in .env.' });
+    }
     return res.status(500).json({ success: false, error: 'Failed to generate weekly insights. Please try again.' });
   }
 });
@@ -129,6 +138,9 @@ router.post('/coping-strategy', validateCopingInput, async (req, res) => {
     return res.status(200).json(normalized);
   } catch (err) {
     console.error('[API] coping-strategy error:', err.message);
+    if (err.message && err.message.includes('Gemini API key')) {
+      return res.status(503).json({ success: false, error: 'Gemini API not configured. Set GEMINI_API_KEY in .env.' });
+    }
     return res.status(500).json({ success: false, error: 'Failed to generate coping strategy. Please try again.' });
   }
 });
